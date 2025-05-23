@@ -11,13 +11,14 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
   const [isPressed, setIsPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const { toast } = useToast();
+  const [countdownInterval, setCountdownInterval] = useState<number | null>(null);
 
   const handleEmergencyPress = () => {
     setIsPressed(true);
     let count = 3;
     setCountdown(count);
 
-    const timer = setInterval(() => {
+    const timer = window.setInterval(() => {
       count--;
       setCountdown(count);
       
@@ -32,9 +33,15 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
         });
       }
     }, 1000);
+    
+    // Store interval ID to clear it if needed
+    setCountdownInterval(timer as unknown as number);
   };
 
   const handleCancel = () => {
+    if (countdownInterval !== null) {
+      clearInterval(countdownInterval);
+    }
     setIsPressed(false);
     setCountdown(0);
     toast({
@@ -71,6 +78,7 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
       <button
         onClick={handleEmergencyPress}
         className="w-48 h-48 rounded-full bg-gradient-to-br from-emergency-500 to-emergency-700 shadow-2xl transform transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center group"
+        aria-label="Emergency SOS Button"
       >
         <div className="text-center text-white">
           <AlertTriangle className="w-16 h-16 mx-auto mb-2 group-hover:animate-shake" />
@@ -81,7 +89,7 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
       
       <div className="text-center text-gray-600 max-w-sm">
         <p className="text-sm">
-          Press and hold the SOS button to send an emergency alert to your contacts and share your location.
+          Press the SOS button to send an emergency alert to your contacts and share your location.
         </p>
       </div>
     </div>

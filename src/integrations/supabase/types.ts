@@ -9,7 +9,170 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string
+          priority: number | null
+          relationship: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone: string
+          priority?: number | null
+          relationship?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string
+          priority?: number | null
+          relationship?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      emergency_incidents: {
+        Row: {
+          id: string
+          location_accuracy: number | null
+          location_lat: number | null
+          location_lng: number | null
+          notes: string | null
+          resolved_at: string | null
+          status: string
+          triggered_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          location_accuracy?: number | null
+          location_lat?: number | null
+          location_lng?: number | null
+          notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          triggered_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          location_accuracy?: number | null
+          location_lat?: number | null
+          location_lng?: number | null
+          notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          triggered_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      location_history: {
+        Row: {
+          accuracy: number | null
+          id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          id?: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          emergency_plan: string | null
+          full_name: string | null
+          id: string
+          phone_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          emergency_plan?: string | null
+          full_name?: string | null
+          id: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          emergency_plan?: string | null
+          full_name?: string | null
+          id?: string
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      recordings: {
+        Row: {
+          duration_seconds: number | null
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+          incident_id: string
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          duration_seconds?: number | null
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          incident_id: string
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          duration_seconds?: number | null
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          incident_id?: string
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recordings_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "emergency_incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

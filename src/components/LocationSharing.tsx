@@ -1,17 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
-import { MapPin, Share2, Users, Shield } from 'lucide-react';
+import { MapPin, Share2, Users, Shield, Navigation } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const LocationSharing = () => {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [accuracy, setAccuracy] = useState<number | null>(null);
+  const [watchId, setWatchId] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     getCurrentLocation();
-  }, []);
+    return () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [watchId]);
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -46,8 +53,60 @@ const LocationSharing = () => {
     );
   };
 
+  const saveLocationToHistory = async (lat: number, lng: number, accuracy: number) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return;
+
+      await supabase
+        .from('location_history')
+        .insert({
+          user_id: user.user.id,
+          lat,
+          lng,
+          accuracy
+        });
+    } catch (error) {
+      console.error('Failed to save location:', error);
+    }
+  };
+
   const startSharing = () => {
+    if (!navigator.geolocation) return;
+
+    const id = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        setLocation(newLocation);
+        setAccuracy(position.coords.accuracy);
+        
+        // Save to location history
+        saveLocationToHistory(
+          position.coords.latitude,
+          position.coords.longitude,
+          position.coords.accuracy
+        );
+      },
+      (error) => {
+        toast({
+          title: "Location Sharing Error",
+          description: "Unable to track location continuously.",
+          variant: "destructive",
+        });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000,
+      }
+    );
+
+    setWatchId(id);
     setIsSharing(true);
+    
     toast({
       title: "Location Sharing Started",
       description: "Your location is now being shared with your emergency contacts.",
@@ -55,11 +114,23 @@ const LocationSharing = () => {
   };
 
   const stopSharing = () => {
+    if (watchId !== null) {
+      navigator.geolocation.clearWatch(watchId);
+      setWatchId(null);
+    }
     setIsSharing(false);
+    
     toast({
       title: "Location Sharing Stopped",
       description: "Your location is no longer being shared.",
     });
+  };
+
+  const openInMaps = () => {
+    if (location) {
+      const url = `https://www.google.com/maps?q=${location.lat},${location.lng}`;
+      window.open(url, '_blank');
+    }
   };
 
   return (
@@ -106,9 +177,16 @@ const LocationSharing = () => {
               
               <button
                 onClick={getCurrentLocation}
-                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200"
               >
                 <MapPin className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={openInMaps}
+                className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200"
+              >
+                <Navigation className="w-5 h-5" />
               </button>
             </div>
 
@@ -141,17 +219,14 @@ const LocationSharing = () => {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center space-x-3 mb-4">
           <Users className="w-6 h-6 text-blue-600" />
-          <h3 className="text-lg font-bold text-gray-900">Sharing With</h3>
+          <h3 className="text-lg font-bold text-gray-900">Location History</h3>
         </div>
         
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div>
-              <div className="font-medium">Emergency Contacts</div>
-              <div className="text-sm text-gray-600">3 contacts</div>
-            </div>
-            <div className={`w-3 h-3 rounded-full ${isSharing ? 'bg-safe-500' : 'bg-gray-300'}`}></div>
-          </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-blue-800 text-sm">
+            Your location history is automatically saved when sharing is active. 
+            This helps emergency services locate you quickly if needed.
+          </p>
         </div>
       </div>
     </div>

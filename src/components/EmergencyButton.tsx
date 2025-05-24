@@ -2,9 +2,10 @@
 import React, { useState } from 'react';
 import { AlertTriangle, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmergencyButtonProps {
-  onEmergencyTrigger: () => void;
+  onEmergencyTrigger: (incidentId: string) => void;
 }
 
 const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
@@ -13,18 +14,71 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
   const { toast } = useToast();
   const [countdownInterval, setCountdownInterval] = useState<number | null>(null);
 
+  const createEmergencyIncident = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
+      // Create emergency incident
+      const { data: incident, error: incidentError } = await supabase
+        .from('emergency_incidents')
+        .insert({
+          user_id: user.user.id,
+          status: 'active'
+        })
+        .select()
+        .single();
+
+      if (incidentError) throw incidentError;
+
+      // Try to get current location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            await supabase
+              .from('emergency_incidents')
+              .update({
+                location_lat: position.coords.latitude,
+                location_lng: position.coords.longitude,
+                location_accuracy: position.coords.accuracy
+              })
+              .eq('id', incident.id);
+          },
+          (error) => {
+            console.warn('Could not get location:', error);
+          },
+          { timeout: 5000 }
+        );
+      }
+
+      return incident.id;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const handleEmergencyPress = () => {
     setIsPressed(true);
     let count = 3;
     setCountdown(count);
 
-    const timer = window.setInterval(() => {
+    const timer = window.setInterval(async () => {
       count--;
       setCountdown(count);
       
       if (count === 0) {
         clearInterval(timer);
-        onEmergencyTrigger();
+        
+        const incidentId = await createEmergencyIncident();
+        if (incidentId) {
+          onEmergencyTrigger(incidentId);
+        }
+        
         setIsPressed(false);
         toast({
           title: "🚨 Emergency Alert Sent!",
@@ -34,7 +88,6 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
       }
     }, 1000);
     
-    // Store interval ID to clear it if needed
     setCountdownInterval(timer as unknown as number);
   };
 

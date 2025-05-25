@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      danger_reports: {
+        Row: {
+          danger_type: string
+          description: string | null
+          id: string
+          location_lat: number
+          location_lng: number
+          reported_at: string | null
+          severity_level: number | null
+          status: string | null
+          user_id: string
+          verified: boolean | null
+          verified_by: string | null
+        }
+        Insert: {
+          danger_type: string
+          description?: string | null
+          id?: string
+          location_lat: number
+          location_lng: number
+          reported_at?: string | null
+          severity_level?: number | null
+          status?: string | null
+          user_id: string
+          verified?: boolean | null
+          verified_by?: string | null
+        }
+        Update: {
+          danger_type?: string
+          description?: string | null
+          id?: string
+          location_lat?: number
+          location_lng?: number
+          reported_at?: string | null
+          severity_level?: number | null
+          status?: string | null
+          user_id?: string
+          verified?: boolean | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       emergency_contacts: {
         Row: {
           created_at: string
@@ -78,6 +120,39 @@ export type Database = {
         }
         Relationships: []
       }
+      fake_call_schedules: {
+        Row: {
+          contact_name: string
+          contact_number: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_instant: boolean | null
+          scheduled_time: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_name: string
+          contact_number: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_instant?: boolean | null
+          scheduled_time?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_name?: string
+          contact_number?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_instant?: boolean | null
+          scheduled_time?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       location_history: {
         Row: {
           accuracy: number | null
@@ -111,24 +186,36 @@ export type Database = {
           emergency_plan: string | null
           full_name: string | null
           id: string
+          location_permissions_granted: boolean | null
           phone_number: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          sos_gesture_enabled: boolean | null
           updated_at: string
+          voice_monitoring_enabled: boolean | null
         }
         Insert: {
           created_at?: string
           emergency_plan?: string | null
           full_name?: string | null
           id: string
+          location_permissions_granted?: boolean | null
           phone_number?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          sos_gesture_enabled?: boolean | null
           updated_at?: string
+          voice_monitoring_enabled?: boolean | null
         }
         Update: {
           created_at?: string
           emergency_plan?: string | null
           full_name?: string | null
           id?: string
+          location_permissions_granted?: boolean | null
           phone_number?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          sos_gesture_enabled?: boolean | null
           updated_at?: string
+          voice_monitoring_enabled?: boolean | null
         }
         Relationships: []
       }
@@ -173,6 +260,87 @@ export type Database = {
           },
         ]
       }
+      safe_zones: {
+        Row: {
+          center_lat: number
+          center_lng: number
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          radius_meters: number
+          updated_at: string | null
+          zone_type: string | null
+        }
+        Insert: {
+          center_lat: number
+          center_lng: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          radius_meters: number
+          updated_at?: string | null
+          zone_type?: string | null
+        }
+        Update: {
+          center_lat?: number
+          center_lng?: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          radius_meters?: number
+          updated_at?: string | null
+          zone_type?: string | null
+        }
+        Relationships: []
+      }
+      safety_resources: {
+        Row: {
+          address: string | null
+          category: string
+          created_at: string | null
+          email: string | null
+          id: string
+          is_24_7: boolean | null
+          location_lat: number | null
+          location_lng: number | null
+          name: string
+          phone_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          category: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_24_7?: boolean | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name: string
+          phone_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          category?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_24_7?: boolean | null
+          location_lat?: number | null
+          location_lng?: number | null
+          name?: string
+          phone_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -181,7 +349,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "user" | "admin" | "govt_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -296,6 +464,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["user", "admin", "govt_admin"],
+    },
   },
 } as const

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AuthForm from '@/components/AuthForm';
@@ -9,7 +8,9 @@ import EmergencyContacts from '@/components/EmergencyContacts';
 import AlertSystem from '@/components/AlertSystem';
 import Settings from '@/components/Settings';
 import RecordingPanel from '@/components/RecordingPanel';
-import { Shield, MapPin, Users, Clock, LogOut, FileText } from 'lucide-react';
+import SafeZoneManager from '@/components/SafeZoneManager';
+import FakeCallScheduler from '@/components/FakeCallScheduler';
+import { Shield, MapPin, Users, Clock, LogOut, FileText, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -77,6 +78,10 @@ const Index = () => {
             }}
           />
         );
+      case 'safezones':
+        return <SafeZoneManager />;
+      case 'fakecall':
+        return <FakeCallScheduler />;
       default:
         return (
           <div className="space-y-8">
@@ -158,12 +163,12 @@ const Index = () => {
                 </button>
 
                 <button 
-                  onClick={() => setActiveTab('alerts')}
+                  onClick={() => setActiveTab('fakecall')}
                   className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
                 >
-                  <Clock className="w-6 h-6 text-warning-600 mb-2" />
-                  <div className="font-medium text-gray-900">Alert System</div>
-                  <div className="text-sm text-gray-600">View your safety alerts</div>
+                  <Phone className="w-6 h-6 text-safe-600 mb-2" />
+                  <div className="font-medium text-gray-900">Fake Call</div>
+                  <div className="text-sm text-gray-600">Emergency escape option</div>
                 </button>
               </div>
             </div>

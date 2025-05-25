@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import AuthForm from '@/components/AuthForm';
@@ -10,7 +11,8 @@ import Settings from '@/components/Settings';
 import RecordingPanel from '@/components/RecordingPanel';
 import SafeZoneManager from '@/components/SafeZoneManager';
 import FakeCallScheduler from '@/components/FakeCallScheduler';
-import { Shield, MapPin, Users, Clock, LogOut, FileText, Phone } from 'lucide-react';
+import IncidentReporting from '@/components/IncidentReporting';
+import { Shield, MapPin, Users, Clock, LogOut, FileText, Phone, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -82,6 +84,8 @@ const Index = () => {
         return <SafeZoneManager />;
       case 'fakecall':
         return <FakeCallScheduler />;
+      case 'incident-report':
+        return <IncidentReporting />;
       default:
         return (
           <div className="space-y-8">
@@ -160,6 +164,15 @@ const Index = () => {
                   <FileText className="w-6 h-6 text-emergency-600 mb-2" />
                   <div className="font-medium text-gray-900">Record Evidence</div>
                   <div className="text-sm text-gray-600">Capture audio/video evidence</div>
+                </button>
+
+                <button 
+                  onClick={() => setActiveTab('incident-report')}
+                  className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
+                >
+                  <AlertTriangle className="w-6 h-6 text-warning-600 mb-2" />
+                  <div className="font-medium text-gray-900">Report Incident</div>
+                  <div className="text-sm text-gray-600">Manual incident reporting</div>
                 </button>
 
                 <button 

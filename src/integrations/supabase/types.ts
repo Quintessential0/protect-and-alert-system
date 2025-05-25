@@ -153,6 +153,66 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_reports: {
+        Row: {
+          description: string | null
+          id: string
+          incident_type: string
+          is_anonymous: boolean | null
+          location_description: string | null
+          location_lat: number | null
+          location_lng: number | null
+          media_files: Json | null
+          reported_at: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity_level: number | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          incident_type: string
+          is_anonymous?: boolean | null
+          location_description?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          media_files?: Json | null
+          reported_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity_level?: number | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          incident_type?: string
+          is_anonymous?: boolean | null
+          location_description?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          media_files?: Json | null
+          reported_at?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity_level?: number | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       location_history: {
         Row: {
           accuracy: number | null

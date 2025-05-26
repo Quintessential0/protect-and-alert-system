@@ -12,7 +12,8 @@ import RecordingPanel from '@/components/RecordingPanel';
 import SafeZoneManager from '@/components/SafeZoneManager';
 import FakeCallScheduler from '@/components/FakeCallScheduler';
 import IncidentReporting from '@/components/IncidentReporting';
-import { Shield, MapPin, Users, Clock, LogOut, FileText, Phone, AlertTriangle } from 'lucide-react';
+import EmotionalSupport from '@/components/EmotionalSupport';
+import { Shield, MapPin, Users, Clock, LogOut, FileText, Phone, AlertTriangle, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -86,6 +87,8 @@ const Index = () => {
         return <FakeCallScheduler />;
       case 'incident-report':
         return <IncidentReporting />;
+      case 'support':
+        return <EmotionalSupport />;
       default:
         return (
           <div className="space-y-8">
@@ -173,6 +176,15 @@ const Index = () => {
                   <AlertTriangle className="w-6 h-6 text-warning-600 mb-2" />
                   <div className="font-medium text-gray-900">Report Incident</div>
                   <div className="text-sm text-gray-600">Manual incident reporting</div>
+                </button>
+
+                <button 
+                  onClick={() => setActiveTab('support')}
+                  className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
+                >
+                  <Heart className="w-6 h-6 text-pink-600 mb-2" />
+                  <div className="font-medium text-gray-900">Emotional Support</div>
+                  <div className="text-sm text-gray-600">Articles, meditation & community</div>
                 </button>
 
                 <button 

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle } from 'lucide-react';
+import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavigationProps {
@@ -15,6 +15,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     { id: 'contacts', label: 'Contacts', icon: Users },
     { id: 'recording', label: 'Record', icon: FileText },
     { id: 'incident-report', label: 'Report', icon: AlertTriangle },
+    { id: 'support', label: 'Support', icon: Heart },
     { id: 'fakecall', label: 'Fake Call', icon: Phone },
     { id: 'safezones', label: 'Safe Zones', icon: Shield },
     { id: 'alerts', label: 'Alerts', icon: Bell },

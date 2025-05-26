@@ -213,6 +213,39 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_entries: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_private: boolean | null
+          mood_rating: number | null
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          mood_rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          mood_rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       location_history: {
         Row: {
           accuracy: number | null
@@ -237,6 +270,96 @@ export type Database = {
           lng?: number
           recorded_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      meditation_sessions: {
+        Row: {
+          audio_url: string | null
+          category: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          difficulty_level: string | null
+          duration_minutes: number
+          id: string
+          is_featured: boolean | null
+          title: string
+        }
+        Insert: {
+          audio_url?: string | null
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_minutes: number
+          id?: string
+          is_featured?: boolean | null
+          title: string
+        }
+        Update: {
+          audio_url?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          difficulty_level?: string | null
+          duration_minutes?: number
+          id?: string
+          is_featured?: boolean | null
+          title?: string
+        }
+        Relationships: []
+      }
+      personal_stories: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          author_name: string | null
+          content: string
+          created_at: string | null
+          id: string
+          is_anonymous: boolean | null
+          likes_count: number | null
+          status: string | null
+          story_type: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_name?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          likes_count?: number | null
+          status?: string | null
+          story_type: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          author_name?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_anonymous?: boolean | null
+          likes_count?: number | null
+          status?: string | null
+          story_type?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -398,6 +521,77 @@ export type Database = {
           location_lng?: number | null
           name?: string
           phone_number?: string | null
+        }
+        Relationships: []
+      }
+      story_likes: {
+        Row: {
+          created_at: string | null
+          id: string
+          story_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          story_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          story_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_likes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "personal_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_articles: {
+        Row: {
+          author: string | null
+          category: string
+          content: string
+          created_at: string | null
+          created_by: string | null
+          excerpt: string | null
+          id: string
+          is_featured: boolean | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string | null
+          category: string
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          category?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          excerpt?: string | null
+          id?: string
+          is_featured?: boolean | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

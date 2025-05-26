@@ -10,7 +10,7 @@ interface RoleGuardProps {
 }
 
 const RoleGuard = ({ allowedRoles, children, fallback }: RoleGuardProps) => {
-  const { profile, loading } = useProfile();
+  const { profile, loading } = useProfile({});
 
   if (loading) {
     return (

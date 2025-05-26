@@ -10,7 +10,7 @@ interface NavigationProps {
 }
 
 const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
-  const { profile } = useProfile();
+  const { profile } = useProfile({});
   const userRole = profile?.role || 'user';
 
   // Define which features each role can access

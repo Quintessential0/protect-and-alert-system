@@ -3,6 +3,7 @@ import React from 'react';
 import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/useAuth';
 
 interface NavigationProps {
   activeTab: string;
@@ -10,7 +11,8 @@ interface NavigationProps {
 }
 
 const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
-  const { profile } = useProfile({});
+  const { user } = useAuth();
+  const { profile } = useProfile(user);
   const userRole = profile?.role || 'user';
 
   // Define which features each role can access

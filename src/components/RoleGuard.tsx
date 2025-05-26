@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/useAuth';
 import { Shield, AlertTriangle } from 'lucide-react';
 
 interface RoleGuardProps {
@@ -10,7 +11,8 @@ interface RoleGuardProps {
 }
 
 const RoleGuard = ({ allowedRoles, children, fallback }: RoleGuardProps) => {
-  const { profile, loading } = useProfile({});
+  const { user } = useAuth();
+  const { profile, loading } = useProfile(user);
 
   if (loading) {
     return (

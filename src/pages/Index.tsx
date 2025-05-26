@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -19,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
-  const { profile } = useProfile({});
+  const { profile } = useProfile(user);
   const [activeTab, setActiveTab] = useState('home');
   const [currentIncidentId, setCurrentIncidentId] = useState<string | null>(null);
   const { toast } = useToast();

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileText, Play, Download, Calendar, User, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -34,16 +33,35 @@ const UserRecordingsView = () => {
       const { data, error } = await supabase
         .from('recordings')
         .select(`
-          *,
-          profiles!inner(full_name, phone_number)
+          id,
+          file_path,
+          file_type,
+          file_size,
+          duration_seconds,
+          recorded_at,
+          incident_id,
+          user_id
         `)
         .order('recorded_at', { ascending: false });
 
       if (error) throw error;
       
+      // Get user profiles separately to avoid join issues
+      const userIds = [...new Set(data?.map(r => r.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_number')
+        .in('id', userIds);
+
+      const profileMap = profiles?.reduce((acc, profile) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {} as Record<string, any>) || {};
+
       const recordingsWithProfiles = data?.map(recording => ({
         ...recording,
-        user_profile: recording.profiles
+        file_type: recording.file_type as 'audio' | 'video',
+        user_profile: profileMap[recording.user_id] || { full_name: 'Unknown User', phone_number: 'Not provided' }
       })) || [];
       
       setRecordings(recordingsWithProfiles);

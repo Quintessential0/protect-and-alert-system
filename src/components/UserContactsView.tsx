@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Users, Phone, Mail, Search, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -33,16 +32,34 @@ const UserContactsView = () => {
       const { data, error } = await supabase
         .from('emergency_contacts')
         .select(`
-          *,
-          profiles!inner(full_name, phone_number)
+          id,
+          name,
+          phone,
+          email,
+          relationship,
+          priority,
+          user_id,
+          created_at
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
+      // Get user profiles separately to avoid join issues
+      const userIds = [...new Set(data?.map(c => c.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_number')
+        .in('id', userIds);
+
+      const profileMap = profiles?.reduce((acc, profile) => {
+        acc[profile.id] = profile;
+        return acc;
+      }, {} as Record<string, any>) || {};
+
       const contactsWithProfiles = data?.map(contact => ({
         ...contact,
-        user_profile: contact.profiles
+        user_profile: profileMap[contact.user_id] || { full_name: 'Unknown User', phone_number: 'Not provided' }
       })) || [];
       
       setContacts(contactsWithProfiles);

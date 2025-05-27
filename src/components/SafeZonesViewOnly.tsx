@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Shield, MapPin, AlertTriangle, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +33,14 @@ const SafeZonesViewOnly = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSafeZones(data || []);
+      
+      // Type assertion to ensure zone_type is properly typed
+      const typedData = data?.map(zone => ({
+        ...zone,
+        zone_type: zone.zone_type as 'safe' | 'unsafe'
+      })) || [];
+      
+      setSafeZones(typedData);
     } catch (error: any) {
       toast({
         title: "Error",

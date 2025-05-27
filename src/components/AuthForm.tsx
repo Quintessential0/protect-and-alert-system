@@ -44,23 +44,52 @@ const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         });
         onAuthSuccess();
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Sign up the user first
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               full_name: fullName,
               phone_number: phoneNumber,
-              role: selectedRole,
             }
           }
         });
         
         if (error) throw error;
         
+        // If user is created, update their profile with the selected role
+        if (data.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ 
+              role: selectedRole,
+              full_name: fullName,
+              phone_number: phoneNumber 
+            })
+            .eq('id', data.user.id);
+
+          if (profileError) {
+            console.error('Error updating profile:', profileError);
+            // Create profile if it doesn't exist
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                full_name: fullName,
+                phone_number: phoneNumber,
+                role: selectedRole,
+              });
+            
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+            }
+          }
+        }
+        
         toast({
           title: "Account created!",
-          description: "Your SafeGuard account has been created successfully.",
+          description: `Your SafeGuard ${selectedRole} account has been created successfully.`,
         });
         onAuthSuccess();
       }

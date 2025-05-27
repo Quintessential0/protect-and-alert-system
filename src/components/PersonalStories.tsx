@@ -1,8 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Plus, Heart, Edit3, Eye, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 interface PersonalStory {
   id: string;
@@ -38,6 +39,9 @@ const PersonalStories = () => {
     tags: [] as string[]
   });
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { profile } = useProfile(user);
+  const userRole = profile?.role || 'user';
 
   const storyTypes = ['survival', 'healing', 'empowerment', 'warning', 'hope'];
 
@@ -97,7 +101,8 @@ const PersonalStories = () => {
         is_anonymous: formData.is_anonymous,
         author_name: formData.is_anonymous ? formData.author_name : null,
         tags: formData.tags,
-        user_id: user.id
+        user_id: user.id,
+        status: userRole === 'user' ? 'pending' : 'approved' // Auto-approve for admins
       };
 
       const { error } = await supabase
@@ -108,7 +113,9 @@ const PersonalStories = () => {
 
       toast({
         title: "Story Submitted",
-        description: "Your story has been submitted for review. Thank you for sharing!",
+        description: userRole === 'user' 
+          ? "Your story has been submitted for review. Thank you for sharing!"
+          : "Your story has been published successfully!",
       });
 
       setFormData({
@@ -121,6 +128,11 @@ const PersonalStories = () => {
       });
       setShowForm(false);
       setActiveTab('read');
+      
+      // Refresh stories if admin published
+      if (userRole !== 'user') {
+        fetchStories();
+      }
     } catch (error) {
       console.error('Error submitting story:', error);
       toast({
@@ -188,7 +200,9 @@ const PersonalStories = () => {
 
   const renderStoryForm = () => (
     <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">Share Your Story</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">
+        {userRole === 'user' ? 'Share Your Story' : 'Create Support Story'}
+      </h3>
       
       <div className="space-y-4">
         <div>
@@ -216,32 +230,36 @@ const PersonalStories = () => {
           </select>
         </div>
 
-        <div className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            id="anonymous"
-            checked={formData.is_anonymous}
-            onChange={(e) => setFormData({ ...formData, is_anonymous: e.target.checked })}
-            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-          />
-          <label htmlFor="anonymous" className="text-sm font-medium text-gray-700">
-            Share anonymously
-          </label>
-        </div>
+        {userRole === 'user' && (
+          <>
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="anonymous"
+                checked={formData.is_anonymous}
+                onChange={(e) => setFormData({ ...formData, is_anonymous: e.target.checked })}
+                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+              />
+              <label htmlFor="anonymous" className="text-sm font-medium text-gray-700">
+                Share anonymously
+              </label>
+            </div>
 
-        {formData.is_anonymous && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Anonymous Name (optional)
-            </label>
-            <input
-              type="text"
-              value={formData.author_name}
-              onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-              placeholder="e.g., 'A Survivor', 'Someone Strong'"
-            />
-          </div>
+            {formData.is_anonymous && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Anonymous Name (optional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.author_name}
+                  onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="e.g., 'A Survivor', 'Someone Strong'"
+                />
+              </div>
+            )}
+          </>
         )}
 
         <div>
@@ -251,7 +269,10 @@ const PersonalStories = () => {
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             rows={10}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            placeholder="Share your experience, your journey, what you've learned..."
+            placeholder={userRole === 'user' 
+              ? "Share your experience, your journey, what you've learned..."
+              : "Create supportive content to help and inspire users..."
+            }
             required
           />
         </div>
@@ -263,7 +284,7 @@ const PersonalStories = () => {
             className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
             <CheckCircle className="w-4 h-4" />
-            <span>Submit Story</span>
+            <span>{userRole === 'user' ? 'Submit Story' : 'Publish Story'}</span>
           </button>
           
           <button
@@ -276,15 +297,17 @@ const PersonalStories = () => {
         </div>
       </div>
 
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-900 mb-2">Before you share:</h4>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• Your story will be reviewed before being published</li>
-          <li>• Only share what you're comfortable with</li>
-          <li>• Your story can help and inspire others</li>
-          <li>• You can choose to remain anonymous</li>
-        </ul>
-      </div>
+      {userRole === 'user' && (
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <h4 className="font-medium text-blue-900 mb-2">Before you share:</h4>
+          <ul className="text-sm text-blue-800 space-y-1">
+            <li>• Your story will be reviewed before being published</li>
+            <li>• Only share what you're comfortable with</li>
+            <li>• Your story can help and inspire others</li>
+            <li>• You can choose to remain anonymous</li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 
@@ -370,14 +393,16 @@ const PersonalStories = () => {
             }`}
           >
             <Plus className="w-4 h-4 inline mr-2" />
-            Share Story
+            {userRole === 'user' ? 'Share Story' : 'Create Story'}
           </button>
         </div>
         
         <p className="text-gray-600">
           {activeTab === 'read' 
             ? 'Read inspiring stories from our community members who have overcome challenges.'
-            : 'Share your experience to inspire and help others in their journey.'}
+            : userRole === 'user'
+              ? 'Share your experience to inspire and help others in their journey.'
+              : 'Create supportive content to help users in their emotional journey.'}
         </p>
       </div>
 
@@ -432,14 +457,16 @@ const PersonalStories = () => {
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Stories Yet</h3>
           <p className="text-gray-600 mb-4">
-            Be the first to share your story and inspire others in our community.
+            {userRole === 'user' 
+              ? 'Be the first to share your story and inspire others in our community.'
+              : 'Create the first supportive story for your community.'}
           </p>
           <button
             onClick={() => { setActiveTab('write'); setShowForm(true); }}
             className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors mx-auto"
           >
             <Plus className="w-4 h-4" />
-            <span>Share Your Story</span>
+            <span>{userRole === 'user' ? 'Share Your Story' : 'Create Story'}</span>
           </button>
         </div>
       )}

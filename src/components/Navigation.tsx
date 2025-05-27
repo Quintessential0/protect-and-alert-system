@@ -39,10 +39,10 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     if (role === 'admin') {
       return [
         ...baseItems,
+        { id: 'user-recordings', label: 'User Media', icon: FileText },
+        { id: 'user-contacts', label: 'User Contacts', icon: Users },
         { id: 'incident-report', label: 'Reports', icon: AlertTriangle },
         { id: 'support', label: 'Support', icon: Heart },
-        { id: 'recording', label: 'Recordings', icon: FileText },
-        { id: 'contacts', label: 'User Contacts', icon: Users },
         { id: 'alerts', label: 'Alerts', icon: Bell },
       ];
     }
@@ -50,7 +50,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     if (role === 'govt_admin') {
       return [
         ...baseItems,
-        { id: 'safezones', label: 'Safe Zones', icon: Shield },
+        { id: 'safezones', label: 'Manage Zones', icon: Shield },
         { id: 'incident-report', label: 'Reports', icon: AlertTriangle },
         { id: 'support', label: 'Support', icon: Heart },
         { id: 'alerts', label: 'Alerts', icon: Bell },

@@ -15,6 +15,9 @@ import SafeZoneManager from '@/components/SafeZoneManager';
 import FakeCallScheduler from '@/components/FakeCallScheduler';
 import IncidentReporting from '@/components/IncidentReporting';
 import EmotionalSupport from '@/components/EmotionalSupport';
+import UserRecordingsView from '@/components/UserRecordingsView';
+import UserContactsView from '@/components/UserContactsView';
+import SafeZonesViewOnly from '@/components/SafeZonesViewOnly';
 import { Shield, MapPin, Users, Clock, LogOut, FileText, Phone, AlertTriangle, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -66,6 +69,7 @@ const Index = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      // User-only features
       case 'location':
         return (
           <RoleGuard allowedRoles={['user']}>
@@ -73,62 +77,36 @@ const Index = () => {
           </RoleGuard>
         );
       case 'contacts':
-        if (userRole === 'user') {
-          return (
-            <RoleGuard allowedRoles={['user']}>
-              <EmergencyContacts />
-            </RoleGuard>
-          );
-        } else {
-          return (
-            <RoleGuard allowedRoles={['admin']}>
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">User Emergency Contacts</h2>
-                <p className="text-gray-600">Admin view of all user emergency contacts for emergency response purposes.</p>
-                {/* This would show all users' contacts for admin */}
-              </div>
-            </RoleGuard>
-          );
-        }
-      case 'alerts':
-        return <AlertSystem />;
-      case 'settings':
-        return <Settings />;
+        return (
+          <RoleGuard allowedRoles={['user']}>
+            <EmergencyContacts />
+          </RoleGuard>
+        );
       case 'recording':
-        if (userRole === 'user') {
-          return (
-            <RoleGuard allowedRoles={['user']}>
-              <RecordingPanel 
-                incidentId={currentIncidentId || undefined}
-                onRecordingComplete={(data) => {
-                  toast({
-                    title: "Evidence Recorded",
-                    description: `${data.type} recording saved successfully.`,
-                  });
-                }}
-              />
-            </RoleGuard>
-          );
-        } else {
-          return (
-            <RoleGuard allowedRoles={['admin']}>
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">User Recordings</h2>
-                <p className="text-gray-600">Admin access to user emergency recordings for investigation purposes.</p>
-                {/* This would show all user recordings for admin review */}
-              </div>
-            </RoleGuard>
-          );
-        }
+        return (
+          <RoleGuard allowedRoles={['user']}>
+            <RecordingPanel 
+              incidentId={currentIncidentId || undefined}
+              onRecordingComplete={(data) => {
+                toast({
+                  title: "Evidence Recorded",
+                  description: `${data.type} recording saved successfully.`,
+                });
+              }}
+            />
+          </RoleGuard>
+        );
+      case 'fakecall':
+        return (
+          <RoleGuard allowedRoles={['user']}>
+            <FakeCallScheduler />
+          </RoleGuard>
+        );
       case 'safezones':
         if (userRole === 'user') {
           return (
             <RoleGuard allowedRoles={['user']}>
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Safe Zones</h2>
-                <p className="text-gray-600">View safe and unsafe zones in your area. Only government administrators can create or modify zones.</p>
-                {/* Read-only view for users */}
-              </div>
+              <SafeZonesViewOnly />
             </RoleGuard>
           );
         } else {
@@ -138,16 +116,31 @@ const Index = () => {
             </RoleGuard>
           );
         }
-      case 'fakecall':
+
+      // Admin-only features
+      case 'user-recordings':
         return (
-          <RoleGuard allowedRoles={['user']}>
-            <FakeCallScheduler />
+          <RoleGuard allowedRoles={['admin']}>
+            <UserRecordingsView />
           </RoleGuard>
         );
+      case 'user-contacts':
+        return (
+          <RoleGuard allowedRoles={['admin']}>
+            <UserContactsView />
+          </RoleGuard>
+        );
+
+      // Shared features with role-specific views
       case 'incident-report':
         return <IncidentReporting />;
       case 'support':
         return <EmotionalSupport />;
+      case 'alerts':
+        return <AlertSystem />;
+      case 'settings':
+        return <Settings />;
+
       default:
         return (
           <div className="space-y-8">
@@ -170,7 +163,7 @@ const Index = () => {
                 </button>
               </div>
               <p className="text-gray-600 max-w-md mx-auto">
-                Welcome back! Your {userRole === 'user' ? 'personal safety companion' : 'administrative dashboard'} is ready.
+                Welcome back! Your {userRole === 'user' ? 'personal safety companion' : userRole === 'admin' ? 'administrative dashboard' : 'government administrative dashboard'} is ready.
               </p>
             </div>
 
@@ -209,14 +202,14 @@ const Index = () => {
                 <>
                   <div className="bg-white rounded-xl shadow-lg p-6 text-center">
                     <FileText className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900">Reports</div>
-                    <div className="text-sm text-gray-600">Incident Management</div>
+                    <div className="text-2xl font-bold text-gray-900">User Media</div>
+                    <div className="text-sm text-gray-600">Audio & Video Access</div>
                   </div>
                   
                   <div className="bg-white rounded-xl shadow-lg p-6 text-center">
                     <Users className="w-8 h-8 text-safe-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900">Users</div>
-                    <div className="text-sm text-gray-600">Contact Management</div>
+                    <div className="text-2xl font-bold text-gray-900">Contacts</div>
+                    <div className="text-sm text-gray-600">Emergency Management</div>
                   </div>
                   
                   <div className="bg-white rounded-xl shadow-lg p-6 text-center">
@@ -231,20 +224,20 @@ const Index = () => {
                 <>
                   <div className="bg-white rounded-xl shadow-lg p-6 text-center">
                     <Shield className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900">Zones</div>
-                    <div className="text-sm text-gray-600">Safety Management</div>
+                    <div className="text-2xl font-bold text-gray-900">Zone Control</div>
+                    <div className="text-sm text-gray-600">Safety Zone Management</div>
                   </div>
                   
                   <div className="bg-white rounded-xl shadow-lg p-6 text-center">
                     <AlertTriangle className="w-8 h-8 text-warning-600 mx-auto mb-3" />
                     <div className="text-2xl font-bold text-gray-900">Reports</div>
-                    <div className="text-sm text-gray-600">Public Safety</div>
+                    <div className="text-sm text-gray-600">Public Safety Oversight</div>
                   </div>
                   
                   <div className="bg-white rounded-xl shadow-lg p-6 text-center">
                     <Heart className="w-8 h-8 text-pink-600 mx-auto mb-3" />
-                    <div className="text-2xl font-bold text-gray-900">Support</div>
-                    <div className="text-sm text-gray-600">Community Resources</div>
+                    <div className="text-2xl font-bold text-gray-900">Gov Support</div>
+                    <div className="text-sm text-gray-600">Government Resources</div>
                   </div>
                 </>
               )}
@@ -294,15 +287,33 @@ const Index = () => {
                   </>
                 )}
 
-                {(userRole === 'admin' || userRole === 'govt_admin') && (
+                {userRole === 'admin' && (
                   <>
+                    <button 
+                      onClick={() => setActiveTab('user-recordings')}
+                      className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
+                    >
+                      <FileText className="w-6 h-6 text-emergency-600 mb-2" />
+                      <div className="font-medium text-gray-900">User Media</div>
+                      <div className="text-sm text-gray-600">Access user recordings</div>
+                    </button>
+
+                    <button 
+                      onClick={() => setActiveTab('user-contacts')}
+                      className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
+                    >
+                      <Users className="w-6 h-6 text-safe-600 mb-2" />
+                      <div className="font-medium text-gray-900">User Contacts</div>
+                      <div className="text-sm text-gray-600">Emergency contact management</div>
+                    </button>
+
                     <button 
                       onClick={() => setActiveTab('incident-report')}
                       className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
                     >
                       <AlertTriangle className="w-6 h-6 text-warning-600 mb-2" />
-                      <div className="font-medium text-gray-900">View Reports</div>
-                      <div className="text-sm text-gray-600">Review incident reports</div>
+                      <div className="font-medium text-gray-900">Manage Reports</div>
+                      <div className="text-sm text-gray-600">Review and process reports</div>
                     </button>
 
                     <button 
@@ -310,41 +321,39 @@ const Index = () => {
                       className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
                     >
                       <Heart className="w-6 h-6 text-pink-600 mb-2" />
-                      <div className="font-medium text-gray-900">Manage Support</div>
-                      <div className="text-sm text-gray-600">Create support content</div>
+                      <div className="font-medium text-gray-900">Support Content</div>
+                      <div className="text-sm text-gray-600">Create support resources</div>
                     </button>
                   </>
                 )}
 
                 {userRole === 'govt_admin' && (
-                  <button 
-                    onClick={() => setActiveTab('safezones')}
-                    className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
-                  >
-                    <Shield className="w-6 h-6 text-blue-600 mb-2" />
-                    <div className="font-medium text-gray-900">Manage Safe Zones</div>
-                    <div className="text-sm text-gray-600">Create and update safety zones</div>
-                  </button>
-                )}
-
-                {userRole === 'admin' && (
                   <>
                     <button 
-                      onClick={() => setActiveTab('recording')}
+                      onClick={() => setActiveTab('safezones')}
                       className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
                     >
-                      <FileText className="w-6 h-6 text-emergency-600 mb-2" />
-                      <div className="font-medium text-gray-900">View Recordings</div>
-                      <div className="text-sm text-gray-600">Access user emergency recordings</div>
+                      <Shield className="w-6 h-6 text-blue-600 mb-2" />
+                      <div className="font-medium text-gray-900">Manage Safe Zones</div>
+                      <div className="text-sm text-gray-600">Create and update safety zones</div>
                     </button>
 
                     <button 
-                      onClick={() => setActiveTab('contacts')}
+                      onClick={() => setActiveTab('incident-report')}
                       className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
                     >
-                      <Users className="w-6 h-6 text-safe-600 mb-2" />
-                      <div className="font-medium text-gray-900">User Contacts</div>
-                      <div className="text-sm text-gray-600">Emergency contact management</div>
+                      <AlertTriangle className="w-6 h-6 text-warning-600 mb-2" />
+                      <div className="font-medium text-gray-900">Review Reports</div>
+                      <div className="text-sm text-gray-600">Government oversight of reports</div>
+                    </button>
+
+                    <button 
+                      onClick={() => setActiveTab('support')}
+                      className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 text-left"
+                    >
+                      <Heart className="w-6 h-6 text-pink-600 mb-2" />
+                      <div className="font-medium text-gray-900">Gov Support</div>
+                      <div className="text-sm text-gray-600">Government support resources</div>
                     </button>
                   </>
                 )}

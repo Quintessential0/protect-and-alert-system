@@ -184,7 +184,9 @@ const Index = () => {
               </div>
 
               <div className="inline-block bg-white rounded-lg px-4 py-2 shadow-sm">
-                <span className="text-sm text-gray-600 capitalize">{userRole} Dashboard</span>
+                <span className="text-sm text-gray-600 capitalize">
+                  {userRole === 'govt_admin' ? 'Government Official' : userRole} Dashboard
+                </span>
               </div>
             </div>
 

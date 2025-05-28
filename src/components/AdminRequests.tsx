@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Shield, Users, FileText, Send, AlertCircle } from 'lucide-react';
+import { Shield, Users, FileText, Send, AlertCircle, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -11,12 +11,16 @@ const AdminRequests = () => {
     location: '',
     reason: '',
     zoneType: 'safe',
-    urgency: 'medium'
+    urgency: 'medium',
+    center_lat: '',
+    center_lng: '',
+    radius_meters: '500'
   });
-  const [accessRequest, setAccessRequest] = useState({
+  const [dataRequest, setDataRequest] = useState({
     userId: '',
     reason: '',
-    dataType: 'recordings'
+    dataType: 'recordings',
+    justification: ''
   });
   
   const { toast } = useToast();
@@ -28,7 +32,6 @@ const AdminRequests = () => {
   const handleZoneRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Log the request (in a real app, this would send to govt admins)
     console.log('Zone Request:', {
       ...zoneRequest,
       requestedBy: user?.id,
@@ -37,36 +40,39 @@ const AdminRequests = () => {
     
     toast({
       title: "Zone Request Submitted",
-      description: "Your request has been sent to government administrators for review.",
+      description: "Your request has been sent to Government Officials for review.",
     });
     
     setZoneRequest({
       location: '',
       reason: '',
       zoneType: 'safe',
-      urgency: 'medium'
+      urgency: 'medium',
+      center_lat: '',
+      center_lng: '',
+      radius_meters: '500'
     });
   };
 
-  const handleAccessRequest = async (e: React.FormEvent) => {
+  const handleDataRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Log the access request (in a real app, this would create a formal request)
-    console.log('Access Request:', {
-      ...accessRequest,
+    console.log('Data Access Request:', {
+      ...dataRequest,
       requestedBy: user?.id,
       requestedAt: new Date().toISOString()
     });
     
     toast({
-      title: "Access Request Submitted",
-      description: "Your request for user data access has been logged for review.",
+      title: "Data Request Submitted",
+      description: "Your request has been sent to Government Officials for verification.",
     });
     
-    setAccessRequest({
+    setDataRequest({
       userId: '',
       reason: '',
-      dataType: 'recordings'
+      dataType: 'recordings',
+      justification: ''
     });
   };
 
@@ -102,14 +108,14 @@ const AdminRequests = () => {
             <span>Zone Request</span>
           </button>
           <button
-            onClick={() => setActiveTab('access-request')}
+            onClick={() => setActiveTab('data-request')}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'access-request'
+              activeTab === 'data-request'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <Users className="w-4 h-4" />
+            <FileText className="w-4 h-4" />
             <span>Data Access</span>
           </button>
         </div>
@@ -119,7 +125,7 @@ const AdminRequests = () => {
             <h3 className="text-lg font-semibold text-blue-900 mb-4">Request Zone Creation/Modification</h3>
             <form onSubmit={handleZoneRequest} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location/Area</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location/Area Name</label>
                 <input
                   type="text"
                   value={zoneRequest.location}
@@ -128,6 +134,45 @@ const AdminRequests = () => {
                   placeholder="e.g., Main Street Park, Downtown District"
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={zoneRequest.center_lat}
+                    onChange={(e) => setZoneRequest({...zoneRequest, center_lat: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., 40.7128"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={zoneRequest.center_lng}
+                    onChange={(e) => setZoneRequest({...zoneRequest, center_lng: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., -74.0060"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Radius (meters)</label>
+                  <input
+                    type="number"
+                    value={zoneRequest.radius_meters}
+                    onChange={(e) => setZoneRequest({...zoneRequest, radius_meters: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    min="100"
+                    placeholder="500"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -179,16 +224,16 @@ const AdminRequests = () => {
           </div>
         )}
 
-        {activeTab === 'access-request' && (
+        {activeTab === 'data-request' && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-yellow-900 mb-4">Request User Data Access</h3>
-            <form onSubmit={handleAccessRequest} className="space-y-4">
+            <h3 className="text-lg font-semibold text-yellow-900 mb-4">Request User Data Access Verification</h3>
+            <form onSubmit={handleDataRequest} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">User ID/Email</label>
                 <input
                   type="text"
-                  value={accessRequest.userId}
-                  onChange={(e) => setAccessRequest({...accessRequest, userId: e.target.value})}
+                  value={dataRequest.userId}
+                  onChange={(e) => setDataRequest({...dataRequest, userId: e.target.value})}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                   placeholder="Enter user ID or email"
                   required
@@ -198,8 +243,8 @@ const AdminRequests = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Data Type Requested</label>
                 <select
-                  value={accessRequest.dataType}
-                  onChange={(e) => setAccessRequest({...accessRequest, dataType: e.target.value})}
+                  value={dataRequest.dataType}
+                  onChange={(e) => setDataRequest({...dataRequest, dataType: e.target.value})}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
                 >
                   <option value="recordings">Audio/Video Recordings</option>
@@ -210,12 +255,24 @@ const AdminRequests = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Access Reason</label>
+                <input
+                  type="text"
+                  value={dataRequest.reason}
+                  onChange={(e) => setDataRequest({...dataRequest, reason: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                  placeholder="Brief reason for access request"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Legal/Administrative Justification</label>
                 <textarea
-                  value={accessRequest.reason}
-                  onChange={(e) => setAccessRequest({...accessRequest, reason: e.target.value})}
+                  value={dataRequest.justification}
+                  onChange={(e) => setDataRequest({...dataRequest, justification: e.target.value})}
                   rows={4}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                  placeholder="Provide legal/administrative justification for data access..."
+                  placeholder="Provide detailed legal or administrative justification for data access..."
                   required
                 />
               </div>
@@ -225,7 +282,7 @@ const AdminRequests = () => {
                 className="flex items-center space-x-2 bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium"
               >
                 <FileText className="w-4 h-4" />
-                <span>Submit Access Request</span>
+                <span>Submit Data Request</span>
               </button>
             </form>
           </div>
@@ -238,7 +295,7 @@ const AdminRequests = () => {
           <h4 className="font-medium text-red-900">Important Notice</h4>
         </div>
         <p className="text-red-800 text-sm">
-          All requests are logged and require proper authorization. Unauthorized access attempts 
+          All requests are logged and require Government Official authorization. Unauthorized access attempts 
           will be reported to system administrators and may result in account suspension.
         </p>
       </div>

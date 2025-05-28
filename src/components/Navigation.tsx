@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart } from 'lucide-react';
+import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +41,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
         ...baseItems,
         { id: 'user-recordings', label: 'User Media', icon: FileText },
         { id: 'user-contacts', label: 'User Contacts', icon: Users },
+        { id: 'admin-requests', label: 'Requests', icon: Zap },
         { id: 'incident-report', label: 'Reports', icon: AlertTriangle },
         { id: 'support', label: 'Support', icon: Heart },
         { id: 'alerts', label: 'Alerts', icon: Bell },

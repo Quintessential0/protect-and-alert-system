@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -149,33 +148,33 @@ const Index = () => {
 
       default:
         return (
-          <div className="min-h-screen bg-white">
+          <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-purple-600 text-white px-6 py-8">
+            <div className="bg-white shadow-sm px-4 py-6">
               <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    <div className="bg-white bg-opacity-20 rounded-lg p-2">
-                      <Shield className="w-8 h-8" />
+                    <div className="bg-purple-100 rounded-lg p-2">
+                      <Shield className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
-                      <h1 className="text-2xl font-bold">SafeGuard</h1>
-                      <p className="text-purple-100 capitalize">
+                      <h1 className="text-xl font-bold text-gray-900">SafeGuard</h1>
+                      <p className="text-sm text-gray-600 capitalize">
                         {userRole === 'govt_admin' ? 'Government Official' : userRole} Dashboard
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
+                    <span className="text-sm">Sign Out</span>
                   </button>
                 </div>
 
                 {userRole === 'user' && (
-                  <div className="flex justify-center">
+                  <div className="flex justify-center mb-6">
                     <EmergencyButton onEmergencyTrigger={handleEmergencyTrigger} />
                   </div>
                 )}
@@ -183,128 +182,105 @@ const Index = () => {
             </div>
 
             {/* Main Content */}
-            <div className="px-6 py-8">
+            <div className="px-4 py-6">
               <div className="max-w-4xl mx-auto">
-                {/* Welcome Message */}
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    Welcome to Your Safety Hub
-                  </h2>
-                  <p className="text-gray-600 max-w-2xl mx-auto">
-                    Your comprehensive safety companion with emergency tools, community support,
-                    and instant assistance. Stay protected, stay connected.
-                  </p>
-                </div>
-
                 {/* Quick Actions Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-2 gap-4 mb-8">
                   {userRole === 'user' && (
                     <>
                       <div 
                         onClick={() => setActiveTab('location')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-blue-100 rounded-lg p-3">
-                            <MapPin className="w-6 h-6 text-blue-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-blue-100 rounded-lg p-2 flex-shrink-0">
+                            <MapPin className="w-5 h-5 text-blue-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Location Sharing</h3>
-                            <p className="text-sm text-gray-600">Share your real-time location</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Location Sharing</h3>
+                            <p className="text-xs text-gray-600 mb-2">Share your real-time location</p>
+                            <p className="text-xs text-blue-700">Keep your contacts informed about your whereabouts</p>
                           </div>
-                        </div>
-                        <div className="bg-blue-50 rounded-lg p-3">
-                          <p className="text-sm text-blue-700">Keep your contacts informed about your whereabouts</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('contacts')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-green-100 rounded-lg p-3">
-                            <Users className="w-6 h-6 text-green-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-green-100 rounded-lg p-2 flex-shrink-0">
+                            <Users className="w-5 h-5 text-green-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Emergency Contacts</h3>
-                            <p className="text-sm text-gray-600">Manage trusted contacts</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Emergency Contacts</h3>
+                            <p className="text-xs text-gray-600 mb-2">Manage trusted contacts</p>
+                            <p className="text-xs text-green-700">Add and organize your emergency contact list</p>
                           </div>
-                        </div>
-                        <div className="bg-green-50 rounded-lg p-3">
-                          <p className="text-sm text-green-700">Add and organize your emergency contact list</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('recording')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-red-100 rounded-lg p-3">
-                            <Camera className="w-6 h-6 text-red-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-red-100 rounded-lg p-2 flex-shrink-0">
+                            <Camera className="w-5 h-5 text-red-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Evidence Recording</h3>
-                            <p className="text-sm text-gray-600">Capture audio/video evidence</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Evidence Recording</h3>
+                            <p className="text-xs text-gray-600 mb-2">Capture audio/video evidence</p>
+                            <p className="text-xs text-red-700">Discretely record important evidence</p>
                           </div>
-                        </div>
-                        <div className="bg-red-50 rounded-lg p-3">
-                          <p className="text-sm text-red-700">Discretely record important evidence</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('fakecall')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-purple-100 rounded-lg p-3">
-                            <Phone className="w-6 h-6 text-purple-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-purple-100 rounded-lg p-2 flex-shrink-0">
+                            <Phone className="w-5 h-5 text-purple-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Fake Call</h3>
-                            <p className="text-sm text-gray-600">Emergency escape option</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Fake Call</h3>
+                            <p className="text-xs text-gray-600 mb-2">Emergency escape option</p>
+                            <p className="text-xs text-purple-700">Schedule fake calls to get out of situations</p>
                           </div>
-                        </div>
-                        <div className="bg-purple-50 rounded-lg p-3">
-                          <p className="text-sm text-purple-700">Schedule fake calls to get out of situations</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('safezones')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-teal-100 rounded-lg p-3">
-                            <Shield className="w-6 h-6 text-teal-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-teal-100 rounded-lg p-2 flex-shrink-0">
+                            <Shield className="w-5 h-5 text-teal-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Safe Zones</h3>
-                            <p className="text-sm text-gray-600">View safe areas nearby</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Safe Zones</h3>
+                            <p className="text-xs text-gray-600 mb-2">View safe areas nearby</p>
+                            <p className="text-xs text-teal-700">Find safe locations and avoid danger zones</p>
                           </div>
-                        </div>
-                        <div className="bg-teal-50 rounded-lg p-3">
-                          <p className="text-sm text-teal-700">Find safe locations and avoid danger zones</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('stories')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-orange-100 rounded-lg p-3">
-                            <BookOpen className="w-6 h-6 text-orange-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-orange-100 rounded-lg p-2 flex-shrink-0">
+                            <BookOpen className="w-5 h-5 text-orange-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Share Your Story</h3>
-                            <p className="text-sm text-gray-600">Community stories & support</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Share Your Story</h3>
+                            <p className="text-xs text-gray-600 mb-2">Community stories & support</p>
+                            <p className="text-xs text-orange-700">Share experiences and read inspiring stories</p>
                           </div>
-                        </div>
-                        <div className="bg-orange-50 rounded-lg p-3">
-                          <p className="text-sm text-orange-700">Share experiences and read inspiring stories</p>
                         </div>
                       </div>
                     </>
@@ -314,55 +290,49 @@ const Index = () => {
                     <>
                       <div 
                         onClick={() => setActiveTab('user-recordings')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-purple-100 rounded-lg p-3">
-                            <FileText className="w-6 h-6 text-purple-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-purple-100 rounded-lg p-2 flex-shrink-0">
+                            <FileText className="w-5 h-5 text-purple-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">User Media</h3>
-                            <p className="text-sm text-gray-600">Access user recordings</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">User Media</h3>
+                            <p className="text-xs text-gray-600 mb-2">Access user recordings</p>
+                            <p className="text-xs text-purple-700">Review and manage user-submitted evidence</p>
                           </div>
-                        </div>
-                        <div className="bg-purple-50 rounded-lg p-3">
-                          <p className="text-sm text-purple-700">Review and manage user-submitted evidence</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('admin-requests')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-yellow-100 rounded-lg p-3">
-                            <Zap className="w-6 h-6 text-yellow-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-yellow-100 rounded-lg p-2 flex-shrink-0">
+                            <Zap className="w-5 h-5 text-yellow-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Admin Requests</h3>
-                            <p className="text-sm text-gray-600">Request zone changes & data access</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Admin Requests</h3>
+                            <p className="text-xs text-gray-600 mb-2">Request zone changes & data access</p>
+                            <p className="text-xs text-yellow-700">Submit requests to Government Officials</p>
                           </div>
-                        </div>
-                        <div className="bg-yellow-50 rounded-lg p-3">
-                          <p className="text-sm text-yellow-700">Submit requests to Government Officials</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('support')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-pink-100 rounded-lg p-3">
-                            <Heart className="w-6 h-6 text-pink-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-pink-100 rounded-lg p-2 flex-shrink-0">
+                            <Heart className="w-5 h-5 text-pink-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Support Content</h3>
-                            <p className="text-sm text-gray-600">Create support resources</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Support Content</h3>
+                            <p className="text-xs text-gray-600 mb-2">Create support resources</p>
+                            <p className="text-xs text-pink-700">Manage emotional support content and articles</p>
                           </div>
-                        </div>
-                        <div className="bg-pink-50 rounded-lg p-3">
-                          <p className="text-sm text-pink-700">Manage emotional support content and articles</p>
                         </div>
                       </div>
                     </>
@@ -372,37 +342,33 @@ const Index = () => {
                     <>
                       <div 
                         onClick={() => setActiveTab('safezones')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-indigo-100 rounded-lg p-3">
-                            <Shield className="w-6 h-6 text-indigo-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-indigo-100 rounded-lg p-2 flex-shrink-0">
+                            <Shield className="w-5 h-5 text-indigo-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Manage Safe Zones</h3>
-                            <p className="text-sm text-gray-600">Create and update safety zones</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Manage Safe Zones</h3>
+                            <p className="text-xs text-gray-600 mb-2">Create and update safety zones</p>
+                            <p className="text-xs text-indigo-700">Define safe and unsafe areas for the community</p>
                           </div>
-                        </div>
-                        <div className="bg-indigo-50 rounded-lg p-3">
-                          <p className="text-sm text-indigo-700">Define safe and unsafe areas for the community</p>
                         </div>
                       </div>
 
                       <div 
                         onClick={() => setActiveTab('incident-report')}
-                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="flex items-center space-x-4 mb-4">
-                          <div className="bg-orange-100 rounded-lg p-3">
-                            <AlertTriangle className="w-6 h-6 text-orange-600" />
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-orange-100 rounded-lg p-2 flex-shrink-0">
+                            <AlertTriangle className="w-5 h-5 text-orange-600" />
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">Review Reports</h3>
-                            <p className="text-sm text-gray-600">Government oversight of reports</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Review Reports</h3>
+                            <p className="text-xs text-gray-600 mb-2">Government oversight of reports</p>
+                            <p className="text-xs text-orange-700">Review and process incident reports</p>
                           </div>
-                        </div>
-                        <div className="bg-orange-50 rounded-lg p-3">
-                          <p className="text-sm text-orange-700">Review and process incident reports</p>
                         </div>
                       </div>
                     </>
@@ -411,56 +377,33 @@ const Index = () => {
                   {/* Shared Features */}
                   <div 
                     onClick={() => setActiveTab('incident-report')}
-                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                    className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                   >
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="bg-red-100 rounded-lg p-3">
-                        <AlertTriangle className="w-6 h-6 text-red-600" />
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-red-100 rounded-lg p-2 flex-shrink-0">
+                        <AlertTriangle className="w-5 h-5 text-red-600" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Report Incident</h3>
-                        <p className="text-sm text-gray-600">Report safety incidents</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Report Incident</h3>
+                        <p className="text-xs text-gray-600 mb-2">Report safety incidents</p>
+                        <p className="text-xs text-red-700">Report incidents to help improve community safety</p>
                       </div>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-3">
-                      <p className="text-sm text-red-700">Report incidents to help improve community safety</p>
                     </div>
                   </div>
 
                   <div 
                     onClick={() => setActiveTab('support')}
-                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                    className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
                   >
-                    <div className="flex items-center space-x-4 mb-4">
-                      <div className="bg-pink-100 rounded-lg p-3">
-                        <Heart className="w-6 h-6 text-pink-600" />
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-pink-100 rounded-lg p-2 flex-shrink-0">
+                        <Heart className="w-5 h-5 text-pink-600" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Emotional Support</h3>
-                        <p className="text-sm text-gray-600">Get help and resources</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm mb-1">Emotional Support</h3>
+                        <p className="text-xs text-gray-600 mb-2">Get help and resources</p>
+                        <p className="text-xs text-pink-700">Access mental health resources and support</p>
                       </div>
-                    </div>
-                    <div className="bg-pink-50 rounded-lg p-3">
-                      <p className="text-sm text-pink-700">Access mental health resources and support</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Safety Stats */}
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white p-8">
-                  <h3 className="text-2xl font-bold mb-4">Your Safety Matters</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold mb-2">24/7</div>
-                      <div className="text-purple-100">Emergency Support</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold mb-2">100%</div>
-                      <div className="text-purple-100">Privacy Protected</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold mb-2">∞</div>
-                      <div className="text-purple-100">Community Support</div>
                     </div>
                   </div>
                 </div>

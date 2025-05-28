@@ -19,7 +19,8 @@ import UserRecordingsView from '@/components/UserRecordingsView';
 import UserContactsView from '@/components/UserContactsView';
 import SafeZonesViewOnly from '@/components/SafeZonesViewOnly';
 import AdminRequests from '@/components/AdminRequests';
-import { Shield, MapPin, Users, LogOut, FileText, Phone, AlertTriangle, Heart, Camera, Zap, MessageCircle } from 'lucide-react';
+import PersonalStories from '@/components/PersonalStories';
+import { Shield, MapPin, Users, LogOut, FileText, Phone, AlertTriangle, Heart, Camera, Zap, MessageCircle, Star, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -57,7 +58,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <Shield className="w-12 h-12 text-emergency-600 mx-auto mb-4 animate-spin" />
+          <Shield className="w-12 h-12 text-purple-600 mx-auto mb-4 animate-spin" />
           <p className="text-gray-600">Loading SafeGuard...</p>
         </div>
       </div>
@@ -117,8 +118,6 @@ const Index = () => {
             </RoleGuard>
           );
         }
-
-      // Admin-only features
       case 'user-recordings':
         return (
           <RoleGuard allowedRoles={['admin']}>
@@ -137,8 +136,6 @@ const Index = () => {
             <AdminRequests />
           </RoleGuard>
         );
-
-      // Shared features with role-specific views
       case 'incident-report':
         return <IncidentReporting />;
       case 'support':
@@ -147,258 +144,325 @@ const Index = () => {
         return <AlertSystem />;
       case 'settings':
         return <Settings />;
+      case 'stories':
+        return <PersonalStories />;
 
       default:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-teal-50 via-blue-50 to-indigo-100">
-            {/* Hero Section */}
-            <div className="text-center py-16 px-6">
-              <div className="flex items-center justify-center mb-6">
-                <div className="bg-white rounded-full p-4 shadow-lg">
-                  <Shield className="w-12 h-12 text-teal-600" />
+          <div className="min-h-screen bg-white">
+            {/* Header */}
+            <div className="bg-purple-600 text-white px-6 py-8">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-white bg-opacity-20 rounded-lg p-2">
+                      <Shield className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold">SafeGuard</h1>
+                      <p className="text-purple-100 capitalize">
+                        {userRole === 'govt_admin' ? 'Government Official' : userRole} Dashboard
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center space-x-2 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
                 </div>
-              </div>
-              
-              <h1 className="text-5xl font-bold text-gray-900 mb-4">
-                Your Safety, <span className="text-teal-600">Always First</span>
-              </h1>
-              
-              <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-                Empowering women with comprehensive safety tools, community support,
-                and instant emergency assistance. You're never alone.
-              </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                 {userRole === 'user' && (
                   <div className="flex justify-center">
                     <EmergencyButton onEmergencyTrigger={handleEmergencyTrigger} />
                   </div>
                 )}
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center space-x-2 bg-white border border-teal-200 text-teal-700 px-6 py-3 rounded-lg hover:bg-teal-50 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
-
-              <div className="inline-block bg-white rounded-lg px-4 py-2 shadow-sm">
-                <span className="text-sm text-gray-600 capitalize">
-                  {userRole === 'govt_admin' ? 'Government Official' : userRole} Dashboard
-                </span>
               </div>
             </div>
 
-            {/* Features Section */}
-            <div className="py-16 px-6">
-              <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-                Comprehensive Safety Features
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                {/* Emergency SOS */}
-                <div className="text-center bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="bg-teal-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Shield className="w-8 h-8 text-teal-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Emergency SOS</h3>
-                  <p className="text-gray-600">
-                    Instant emergency alerts to your trusted contacts and local authorities
-                  </p>
-                </div>
-
-                {/* Location Tracking */}
-                <div className="text-center bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="bg-red-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <MapPin className="w-8 h-8 text-red-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Location Tracking</h3>
-                  <p className="text-gray-600">
-                    Real-time location sharing and safe zone monitoring
-                  </p>
-                </div>
-
-                {/* AI Assistant */}
-                <div className="text-center bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="bg-purple-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <MessageCircle className="w-8 h-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">AI Assistant</h3>
-                  <p className="text-gray-600">
-                    24/7 AI chatbot for guidance and emotional support
-                  </p>
-                </div>
-
-                {/* Mental Health */}
-                <div className="text-center bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="bg-pink-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Heart className="w-8 h-8 text-pink-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Mental Health</h3>
-                  <p className="text-gray-600">
-                    Wellness resources, meditation, and community support
-                  </p>
-                </div>
-
-                {/* Community */}
-                <div className="text-center bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="bg-blue-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Users className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Community</h3>
-                  <p className="text-gray-600">
-                    Connect with other women and share safety experiences
-                  </p>
-                </div>
-
-                {/* Evidence Recording */}
-                <div className="text-center bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="bg-orange-100 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Camera className="w-8 h-8 text-orange-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">Evidence Recording</h3>
-                  <p className="text-gray-600">
-                    Discreet audio and video recording for safety documentation
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="py-16 px-6 bg-white">
+            {/* Main Content */}
+            <div className="px-6 py-8">
               <div className="max-w-4xl mx-auto">
-                <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Quick Actions</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Welcome Message */}
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                    Welcome to Your Safety Hub
+                  </h2>
+                  <p className="text-gray-600 max-w-2xl mx-auto">
+                    Your comprehensive safety companion with emergency tools, community support,
+                    and instant assistance. Stay protected, stay connected.
+                  </p>
+                </div>
+
+                {/* Quick Actions Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                   {userRole === 'user' && (
                     <>
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('location')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-teal-300 hover:bg-teal-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-teal-100 rounded-lg p-3 mr-4 group-hover:bg-teal-200 transition-colors">
-                          <MapPin className="w-6 h-6 text-teal-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-blue-100 rounded-lg p-3">
+                            <MapPin className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Location Sharing</h3>
+                            <p className="text-sm text-gray-600">Share your real-time location</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Share Location</div>
-                          <div className="text-sm text-gray-600">Let contacts know where you are</div>
+                        <div className="bg-blue-50 rounded-lg p-3">
+                          <p className="text-sm text-blue-700">Keep your contacts informed about your whereabouts</p>
                         </div>
-                      </button>
-                      
-                      <button 
+                      </div>
+
+                      <div 
                         onClick={() => setActiveTab('contacts')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-green-100 rounded-lg p-3 mr-4 group-hover:bg-green-200 transition-colors">
-                          <Users className="w-6 h-6 text-green-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-green-100 rounded-lg p-3">
+                            <Users className="w-6 h-6 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Emergency Contacts</h3>
+                            <p className="text-sm text-gray-600">Manage trusted contacts</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Emergency Contacts</div>
-                          <div className="text-sm text-gray-600">Manage your emergency contacts</div>
+                        <div className="bg-green-50 rounded-lg p-3">
+                          <p className="text-sm text-green-700">Add and organize your emergency contact list</p>
                         </div>
-                      </button>
+                      </div>
 
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('recording')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-red-300 hover:bg-red-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-red-100 rounded-lg p-3 mr-4 group-hover:bg-red-200 transition-colors">
-                          <FileText className="w-6 h-6 text-red-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-red-100 rounded-lg p-3">
+                            <Camera className="w-6 h-6 text-red-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Evidence Recording</h3>
+                            <p className="text-sm text-gray-600">Capture audio/video evidence</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Record Evidence</div>
-                          <div className="text-sm text-gray-600">Capture audio/video evidence</div>
+                        <div className="bg-red-50 rounded-lg p-3">
+                          <p className="text-sm text-red-700">Discretely record important evidence</p>
                         </div>
-                      </button>
+                      </div>
 
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('fakecall')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-blue-100 rounded-lg p-3 mr-4 group-hover:bg-blue-200 transition-colors">
-                          <Phone className="w-6 h-6 text-blue-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-purple-100 rounded-lg p-3">
+                            <Phone className="w-6 h-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Fake Call</h3>
+                            <p className="text-sm text-gray-600">Emergency escape option</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Fake Call</div>
-                          <div className="text-sm text-gray-600">Emergency escape option</div>
+                        <div className="bg-purple-50 rounded-lg p-3">
+                          <p className="text-sm text-purple-700">Schedule fake calls to get out of situations</p>
                         </div>
-                      </button>
+                      </div>
+
+                      <div 
+                        onClick={() => setActiveTab('safezones')}
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                      >
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-teal-100 rounded-lg p-3">
+                            <Shield className="w-6 h-6 text-teal-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Safe Zones</h3>
+                            <p className="text-sm text-gray-600">View safe areas nearby</p>
+                          </div>
+                        </div>
+                        <div className="bg-teal-50 rounded-lg p-3">
+                          <p className="text-sm text-teal-700">Find safe locations and avoid danger zones</p>
+                        </div>
+                      </div>
+
+                      <div 
+                        onClick={() => setActiveTab('stories')}
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                      >
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-orange-100 rounded-lg p-3">
+                            <BookOpen className="w-6 h-6 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Share Your Story</h3>
+                            <p className="text-sm text-gray-600">Community stories & support</p>
+                          </div>
+                        </div>
+                        <div className="bg-orange-50 rounded-lg p-3">
+                          <p className="text-sm text-orange-700">Share experiences and read inspiring stories</p>
+                        </div>
+                      </div>
                     </>
                   )}
 
                   {userRole === 'admin' && (
                     <>
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('user-recordings')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-purple-100 rounded-lg p-3 mr-4 group-hover:bg-purple-200 transition-colors">
-                          <FileText className="w-6 h-6 text-purple-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-purple-100 rounded-lg p-3">
+                            <FileText className="w-6 h-6 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">User Media</h3>
+                            <p className="text-sm text-gray-600">Access user recordings</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">User Media</div>
-                          <div className="text-sm text-gray-600">Access user recordings</div>
+                        <div className="bg-purple-50 rounded-lg p-3">
+                          <p className="text-sm text-purple-700">Review and manage user-submitted evidence</p>
                         </div>
-                      </button>
+                      </div>
 
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('admin-requests')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-yellow-300 hover:bg-yellow-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-yellow-100 rounded-lg p-3 mr-4 group-hover:bg-yellow-200 transition-colors">
-                          <Zap className="w-6 h-6 text-yellow-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-yellow-100 rounded-lg p-3">
+                            <Zap className="w-6 h-6 text-yellow-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Admin Requests</h3>
+                            <p className="text-sm text-gray-600">Request zone changes & data access</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Admin Requests</div>
-                          <div className="text-sm text-gray-600">Request zone changes & data access</div>
+                        <div className="bg-yellow-50 rounded-lg p-3">
+                          <p className="text-sm text-yellow-700">Submit requests to Government Officials</p>
                         </div>
-                      </button>
+                      </div>
 
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('support')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-pink-300 hover:bg-pink-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-pink-100 rounded-lg p-3 mr-4 group-hover:bg-pink-200 transition-colors">
-                          <Heart className="w-6 h-6 text-pink-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-pink-100 rounded-lg p-3">
+                            <Heart className="w-6 h-6 text-pink-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Support Content</h3>
+                            <p className="text-sm text-gray-600">Create support resources</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Support Content</div>
-                          <div className="text-sm text-gray-600">Create support resources</div>
+                        <div className="bg-pink-50 rounded-lg p-3">
+                          <p className="text-sm text-pink-700">Manage emotional support content and articles</p>
                         </div>
-                      </button>
+                      </div>
                     </>
                   )}
 
                   {userRole === 'govt_admin' && (
                     <>
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('safezones')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-indigo-100 rounded-lg p-3 mr-4 group-hover:bg-indigo-200 transition-colors">
-                          <Shield className="w-6 h-6 text-indigo-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-indigo-100 rounded-lg p-3">
+                            <Shield className="w-6 h-6 text-indigo-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Manage Safe Zones</h3>
+                            <p className="text-sm text-gray-600">Create and update safety zones</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Manage Safe Zones</div>
-                          <div className="text-sm text-gray-600">Create and update safety zones</div>
+                        <div className="bg-indigo-50 rounded-lg p-3">
+                          <p className="text-sm text-indigo-700">Define safe and unsafe areas for the community</p>
                         </div>
-                      </button>
+                      </div>
 
-                      <button 
+                      <div 
                         onClick={() => setActiveTab('incident-report')}
-                        className="flex items-center p-6 rounded-xl border-2 border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 text-left group"
+                        className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
                       >
-                        <div className="bg-orange-100 rounded-lg p-3 mr-4 group-hover:bg-orange-200 transition-colors">
-                          <AlertTriangle className="w-6 h-6 text-orange-600" />
+                        <div className="flex items-center space-x-4 mb-4">
+                          <div className="bg-orange-100 rounded-lg p-3">
+                            <AlertTriangle className="w-6 h-6 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">Review Reports</h3>
+                            <p className="text-sm text-gray-600">Government oversight of reports</p>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-gray-900">Review Reports</div>
-                          <div className="text-sm text-gray-600">Government oversight of reports</div>
+                        <div className="bg-orange-50 rounded-lg p-3">
+                          <p className="text-sm text-orange-700">Review and process incident reports</p>
                         </div>
-                      </button>
+                      </div>
                     </>
                   )}
+
+                  {/* Shared Features */}
+                  <div 
+                    onClick={() => setActiveTab('incident-report')}
+                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                  >
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="bg-red-100 rounded-lg p-3">
+                        <AlertTriangle className="w-6 h-6 text-red-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Report Incident</h3>
+                        <p className="text-sm text-gray-600">Report safety incidents</p>
+                      </div>
+                    </div>
+                    <div className="bg-red-50 rounded-lg p-3">
+                      <p className="text-sm text-red-700">Report incidents to help improve community safety</p>
+                    </div>
+                  </div>
+
+                  <div 
+                    onClick={() => setActiveTab('support')}
+                    className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-100"
+                  >
+                    <div className="flex items-center space-x-4 mb-4">
+                      <div className="bg-pink-100 rounded-lg p-3">
+                        <Heart className="w-6 h-6 text-pink-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">Emotional Support</h3>
+                        <p className="text-sm text-gray-600">Get help and resources</p>
+                      </div>
+                    </div>
+                    <div className="bg-pink-50 rounded-lg p-3">
+                      <p className="text-sm text-pink-700">Access mental health resources and support</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Safety Stats */}
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white p-8">
+                  <h3 className="text-2xl font-bold mb-4">Your Safety Matters</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold mb-2">24/7</div>
+                      <div className="text-purple-100">Emergency Support</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold mb-2">100%</div>
+                      <div className="text-purple-100">Privacy Protected</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold mb-2">∞</div>
+                      <div className="text-purple-100">Community Support</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

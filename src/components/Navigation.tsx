@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap } from 'lucide-react';
+import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap, CheckSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
@@ -51,6 +50,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
     if (role === 'govt_admin') {
       return [
         ...baseItems,
+        { id: 'govt-requests', label: 'Review', icon: CheckSquare },
         { id: 'safezones', label: 'Manage Zones', icon: Shield },
         { id: 'incident-report', label: 'Reports', icon: AlertTriangle },
         { id: 'support', label: 'Support', icon: Heart },

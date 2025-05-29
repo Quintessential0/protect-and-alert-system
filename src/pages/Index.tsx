@@ -19,6 +19,7 @@ import UserContactsView from '@/components/UserContactsView';
 import SafeZonesViewOnly from '@/components/SafeZonesViewOnly';
 import AdminRequests from '@/components/AdminRequests';
 import PersonalStories from '@/components/PersonalStories';
+import GovernmentRequests from '@/components/GovernmentRequests';
 import { Shield, MapPin, Users, LogOut, FileText, Phone, AlertTriangle, Heart, Camera, Zap, MessageCircle, Star, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -133,6 +134,12 @@ const Index = () => {
         return (
           <RoleGuard allowedRoles={['admin']}>
             <AdminRequests />
+          </RoleGuard>
+        );
+      case 'govt-requests':
+        return (
+          <RoleGuard allowedRoles={['govt_admin']}>
+            <GovernmentRequests />
           </RoleGuard>
         );
       case 'incident-report':
@@ -368,6 +375,22 @@ const Index = () => {
                             <h3 className="font-semibold text-gray-900 text-sm mb-1">Review Reports</h3>
                             <p className="text-xs text-gray-600 mb-2">Government oversight of reports</p>
                             <p className="text-xs text-orange-700">Review and process incident reports</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div 
+                        onClick={() => setActiveTab('govt-requests')}
+                        className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer border border-gray-100"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-blue-100 rounded-lg p-2 flex-shrink-0">
+                            <Shield className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">Review Requests</h3>
+                            <p className="text-xs text-gray-600 mb-2">Admin requests for approval</p>
+                            <p className="text-xs text-blue-700">Review data access and zone modification requests</p>
                           </div>
                         </div>
                       </div>

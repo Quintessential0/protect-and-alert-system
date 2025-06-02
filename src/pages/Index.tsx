@@ -18,6 +18,7 @@ import UserRecordingsView from '@/components/UserRecordingsView';
 import UserContactsView from '@/components/UserContactsView';
 import AdminRequests from '@/components/AdminRequests';
 import GovernmentRequests from '@/components/GovernmentRequests';
+import ChatbotSupport from '@/components/ChatbotSupport';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -33,7 +34,7 @@ const Index = () => {
   }
 
   if (!user) {
-    return <AuthForm />;
+    return <AuthForm onAuthSuccess={() => window.location.reload()} />;
   }
 
   const userRole = profile?.role || 'user';
@@ -70,6 +71,8 @@ const Index = () => {
         return userRole === 'govt_admin' ? <SafeZoneManager /> : <SafeZonesViewOnly />;
       case 'alerts':
         return <AlertSystem />;
+      case 'chatbot':
+        return <ChatbotSupport />;
       case 'settings':
         return <Settings />;
       case 'user-recordings':

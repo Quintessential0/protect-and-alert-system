@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap, CheckSquare } from 'lucide-react';
+import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap, CheckSquare, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,6 +19,7 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
   const getNavItemsForRole = (role: string) => {
     const baseItems = [
       { id: 'home', label: 'Home', icon: Home },
+      { id: 'chatbot', label: 'Chat Support', icon: MessageCircle },
       { id: 'settings', label: 'Settings', icon: Settings },
     ];
 

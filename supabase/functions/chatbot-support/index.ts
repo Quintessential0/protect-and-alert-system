@@ -7,6 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -15,9 +17,11 @@ serve(async (req) => {
 
   try {
     const { message, conversationHistory } = await req.json();
+    console.log('Received request:', { message, historyLength: conversationHistory?.length });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
+      console.error('OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
 
@@ -55,27 +59,60 @@ Available SafeGuard features you can help explain:
       { role: 'user', content: message }
     ];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: messages,
-        max_tokens: 500,
-        temperature: 0.7,
-        stream: false,
-      }),
-    });
+    // Retry logic with exponential backoff
+    let response;
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      try {
+        console.log(`Attempt ${attempts + 1} to call OpenAI API`);
+        
+        response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: messages,
+            max_tokens: 500,
+            temperature: 0.7,
+            stream: false,
+          }),
+        });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+        if (response.ok) {
+          break; // Success, exit retry loop
+        } else if (response.status === 429) {
+          // Rate limited
+          const retryAfter = response.headers.get('retry-after');
+          const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempts) * 1000;
+          console.log(`Rate limited, waiting ${waitTime}ms before retry`);
+          await delay(waitTime);
+          attempts++;
+        } else {
+          throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+        }
+      } catch (error) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          throw error;
+        }
+        console.log(`Attempt ${attempts} failed, retrying...`);
+        await delay(Math.pow(2, attempts - 1) * 1000);
+      }
+    }
+
+    if (!response || !response.ok) {
+      throw new Error(`OpenAI API error after ${maxAttempts} attempts`);
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
+    console.log('OpenAI response received successfully');
+    
+    const aiResponse = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't generate a proper response. Please try again.";
 
     return new Response(
       JSON.stringify({ 
@@ -89,13 +126,26 @@ Available SafeGuard features you can help explain:
 
   } catch (error) {
     console.error('Error in chatbot-support function:', error);
+    
+    let errorMessage = 'Failed to get AI response';
+    let statusCode = 500;
+    
+    if (error.message?.includes('429') || error.message?.includes('rate')) {
+      errorMessage = 'AI service is temporarily busy due to high usage';
+      statusCode = 429;
+    } else if (error.message?.includes('API key')) {
+      errorMessage = 'AI service configuration error';
+      statusCode = 503;
+    }
+    
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to get AI response',
-        details: error.message 
+        error: errorMessage,
+        details: error.message,
+        retryable: statusCode === 429
       }),
       {
-        status: 500,
+        status: statusCode,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

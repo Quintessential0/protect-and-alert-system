@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { MessageCircle, Send, Bot, User, Shield } from 'lucide-react';
+import { MessageCircle, Send, Bot, User, Shield, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
@@ -24,6 +24,7 @@ const ChatbotSupport = () => {
   ]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -35,7 +36,7 @@ const ChatbotSupport = () => {
     scrollToBottom();
   }, [messages]);
 
-  const sendMessage = async () => {
+  const sendMessage = async (retryAttempt = 0) => {
     if (!currentMessage.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -46,44 +47,71 @@ const ChatbotSupport = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageToSend = currentMessage;
     setCurrentMessage('');
     setIsLoading(true);
 
     try {
+      console.log('Sending message to chatbot:', messageToSend);
+      
       // Prepare conversation history for context
-      const conversationHistory = messages.slice(-10).map(msg => ({
+      const conversationHistory = messages.slice(-5).map(msg => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.content
       }));
 
       const { data, error } = await supabase.functions.invoke('chatbot-support', {
         body: {
-          message: currentMessage,
+          message: messageToSend,
           conversationHistory
         }
       });
 
-      if (error) throw error;
+      console.log('Chatbot response:', data, error);
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.response,
+        content: data.response || "I received your message but couldn't generate a proper response. Please try again.",
         sender: 'bot',
         timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, botMessage]);
+      setRetryCount(0);
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Handle rate limiting specifically
+      if (error?.message?.includes('429') || error?.message?.includes('rate')) {
+        if (retryAttempt < 2) {
+          console.log(`Rate limited, retrying in ${(retryAttempt + 1) * 2} seconds...`);
+          setTimeout(() => {
+            sendMessage(retryAttempt + 1);
+          }, (retryAttempt + 1) * 2000);
+          return;
+        } else {
+          toast({
+            title: "Rate Limited",
+            description: "The AI service is temporarily busy. Please wait a moment before trying again.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to send message. Please check your connection and try again.",
+          variant: "destructive",
+        });
+      }
 
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
+        content: "I'm sorry, I'm having trouble responding right now. This might be due to high usage. Please try again in a moment.",
         sender: 'bot',
         timestamp: new Date(),
       };
@@ -112,10 +140,19 @@ const ChatbotSupport = () => {
     setCurrentMessage(response);
   };
 
+  const retryLastMessage = () => {
+    if (messages.length >= 2) {
+      const lastUserMessage = messages[messages.length - 2];
+      if (lastUserMessage.sender === 'user') {
+        setCurrentMessage(lastUserMessage.content);
+      }
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg h-[600px] flex flex-col">
       {/* Header */}
-      <div className="flex items-center p-4 border-b border-gray-200 bg-emergency-50 rounded-t-xl">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-emergency-50 rounded-t-xl">
         <div className="flex items-center space-x-3">
           <div className="bg-emergency-600 p-2 rounded-full">
             <Shield className="w-5 h-5 text-white" />
@@ -125,6 +162,15 @@ const ChatbotSupport = () => {
             <p className="text-sm text-gray-600">Your personal safety assistant</p>
           </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={retryLastMessage}
+          className="flex items-center space-x-1"
+        >
+          <RefreshCw className="w-4 h-4" />
+          <span>Retry</span>
+        </Button>
       </div>
 
       {/* Messages */}
@@ -140,7 +186,7 @@ const ChatbotSupport = () => {
               }`}
             >
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   message.sender === 'user'
                     ? 'bg-emergency-600'
                     : 'bg-gray-200'
@@ -222,7 +268,7 @@ const ChatbotSupport = () => {
             disabled={isLoading}
           />
           <Button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={!currentMessage.trim() || isLoading}
             className="bg-emergency-600 hover:bg-emergency-700 text-white"
           >

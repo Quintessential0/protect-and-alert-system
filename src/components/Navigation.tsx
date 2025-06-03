@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap, CheckSquare, MessageCircle, LogOut } from 'lucide-react';
+import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap, CheckSquare, MessageCircle, LogOut, Mic, Book, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
@@ -43,6 +43,12 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
         { id: 'fakecall', label: 'Fake Call', icon: Phone },
         { id: 'safezones', label: 'Safe Zones', icon: Shield },
         { id: 'alerts', label: 'Alerts', icon: Bell },
+        { id: 'voice-commands', label: 'Voice', icon: Mic },
+        { id: 'journal', label: 'Journal', icon: Book },
+        { id: 'activity', label: 'Activity', icon: Clock },
+        { id: 'resources', label: 'Resources', icon: Shield },
+        { id: 'meditation', label: 'Meditation', icon: Heart },
+        { id: 'scream-detection', label: 'Detection', icon: Mic },
       ];
     }
 
@@ -55,6 +61,8 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
         { id: 'incident-report', label: 'Reports', icon: AlertTriangle },
         { id: 'support', label: 'Support', icon: Heart },
         { id: 'alerts', label: 'Alerts', icon: Bell },
+        { id: 'activity', label: 'Activity', icon: Clock },
+        { id: 'resources', label: 'Resources', icon: Shield },
       ];
     }
 
@@ -66,6 +74,8 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
         { id: 'incident-report', label: 'Reports', icon: AlertTriangle },
         { id: 'support', label: 'Support', icon: Heart },
         { id: 'alerts', label: 'Alerts', icon: Bell },
+        { id: 'activity', label: 'Activity', icon: Clock },
+        { id: 'resources', label: 'Resources', icon: Shield },
       ];
     }
 

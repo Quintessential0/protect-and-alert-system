@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -20,6 +19,12 @@ import AdminRequests from '@/components/AdminRequests';
 import GovernmentRequests from '@/components/GovernmentRequests';
 import ChatbotSupport from '@/components/ChatbotSupport';
 import EmergencyButton from '@/components/EmergencyButton';
+import MeditationSessions from '@/components/MeditationSessions';
+import ScreamDetection from '@/components/ScreamDetection';
+import AnonymousJournal from '@/components/AnonymousJournal';
+import SafetyResourceDirectory from '@/components/SafetyResourceDirectory';
+import ActivityHistory from '@/components/ActivityHistory';
+import VoiceCommands from '@/components/VoiceCommands';
 import { Shield, MapPin, Users, FileText, Phone, AlertTriangle, Heart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -227,6 +232,18 @@ const Index = () => {
         return <AdminRequests />;
       case 'govt-requests':
         return <GovernmentRequests />;
+      case 'meditation':
+        return <MeditationSessions />;
+      case 'scream-detection':
+        return <ScreamDetection />;
+      case 'journal':
+        return <AnonymousJournal />;
+      case 'resources':
+        return <SafetyResourceDirectory />;
+      case 'activity':
+        return <ActivityHistory />;
+      case 'voice-commands':
+        return <VoiceCommands />;
       default:
         return (
           <div className="bg-white rounded-xl shadow-lg p-6">

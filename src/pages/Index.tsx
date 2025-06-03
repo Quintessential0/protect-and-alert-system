@@ -21,11 +21,22 @@ import GovernmentRequests from '@/components/GovernmentRequests';
 import ChatbotSupport from '@/components/ChatbotSupport';
 import EmergencyButton from '@/components/EmergencyButton';
 import { Shield, MapPin, Users, FileText, Phone, AlertTriangle, Heart } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { user, loading } = useAuth();
   const { profile } = useProfile(user);
   const [activeTab, setActiveTab] = useState('home');
+  const { toast } = useToast();
+
+  const handleEmergencyTrigger = (incidentId: string) => {
+    console.log('Emergency triggered with incident ID:', incidentId);
+    toast({
+      title: "Emergency Alert Sent!",
+      description: "Your emergency contacts have been notified.",
+      variant: "destructive",
+    });
+  };
 
   if (loading) {
     return (
@@ -65,7 +76,7 @@ const Index = () => {
             {userRole === 'user' && (
               <>
                 <div className="flex justify-center mb-8">
-                  <EmergencyButton />
+                  <EmergencyButton onEmergencyTrigger={handleEmergencyTrigger} />
                 </div>
 
                 {/* Alert text */}

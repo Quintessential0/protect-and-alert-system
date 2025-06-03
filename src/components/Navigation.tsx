@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap, CheckSquare, MessageCircle } from 'lucide-react';
+import { Shield, Home, MapPin, Users, Settings, Bell, FileText, Phone, AlertTriangle, Heart, Zap, CheckSquare, MessageCircle, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,9 +11,18 @@ interface NavigationProps {
 }
 
 const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { profile } = useProfile(user);
   const userRole = profile?.role || 'user';
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      window.location.reload();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
 
   // Define which features each role can access
   const getNavItemsForRole = (role: string) => {
@@ -88,6 +97,15 @@ const Navigation = ({ activeTab, onTabChange }: NavigationProps) => {
             </button>
           );
         })}
+        
+        {/* Sign Out Button */}
+        <button
+          onClick={handleSignOut}
+          className="flex flex-col md:flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 min-w-0 flex-shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="text-xs mt-1 font-medium md:text-[9px] truncate">Sign Out</span>
+        </button>
       </div>
     </nav>
   );

@@ -1,7 +1,6 @@
 
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ScreamDetectionProps {
   isActive: boolean;
@@ -40,13 +39,6 @@ const ScreamDetection = ({ isActive, onDetection }: ScreamDetectionProps) => {
           if (average > 150) {
             console.log('Potential distress detected:', average);
             onDetection();
-            
-            // Log detection event
-            supabase.from('activity_history').insert({
-              activity_type: 'scream_detected',
-              details: { audio_level: average },
-              created_at: new Date().toISOString()
-            });
           }
           
           if (isActive) {

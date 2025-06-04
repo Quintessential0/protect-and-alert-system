@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import AuthForm from '@/components/AuthForm';
-import Navigation from '@/components/Navigation';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import UserDashboard from '@/components/dashboard/UserDashboard';
-import AdminDashboard from '@/components/dashboard/AdminDashboard';
+import TopNavigation from '@/components/TopNavigation';
+import LandingPage from '@/components/LandingPage';
+import CoreFeatures from '@/components/CoreFeatures';
+import Community from '@/components/Community';
 import ContentRenderer from '@/components/dashboard/ContentRenderer';
 import AlertSystem from '@/components/AlertSystem';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,7 @@ const Index = () => {
   const { user, loading } = useAuth();
   const { profile } = useProfile(user);
   const [activeTab, setActiveTab] = useState('home');
+  const [showAuth, setShowAuth] = useState(false);
   const { toast } = useToast();
 
   const handleEmergencyTrigger = (incidentId: string) => {
@@ -34,7 +35,17 @@ const Index = () => {
     );
   }
 
-  if (!user) {
+  // Show landing page for non-authenticated users
+  if (!user && !showAuth) {
+    return (
+      <LandingPage 
+        onGetStarted={() => setShowAuth(true)} 
+      />
+    );
+  }
+
+  // Show auth form when requested
+  if (!user && showAuth) {
     return <AuthForm onAuthSuccess={() => window.location.reload()} />;
   }
 
@@ -43,27 +54,45 @@ const Index = () => {
   const renderContent = () => {
     if (activeTab === 'home') {
       return (
-        <div className="space-y-8">
-          <DashboardHeader userRole={userRole} />
-          
-          {userRole === 'user' && <UserDashboard onEmergencyTrigger={handleEmergencyTrigger} />}
-          <AdminDashboard userRole={userRole} />
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to SafeGuard</h1>
+            <p className="text-gray-600">Your personal safety dashboard</p>
+          </div>
+          <CoreFeatures onFeatureSelect={setActiveTab} />
+        </div>
+      );
+    }
+
+    if (activeTab === 'alerts') {
+      return (
+        <div className="container mx-auto px-4 py-6">
           <AlertSystem />
         </div>
       );
     }
 
-    return <ContentRenderer activeTab={activeTab} userRole={userRole} />;
+    if (activeTab === 'community' && userRole === 'user') {
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <Community />
+        </div>
+      );
+    }
+
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <ContentRenderer activeTab={activeTab} userRole={userRole} />
+      </div>
+    );
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emergency-50 to-emergency-100">
-      <div className="container mx-auto px-4 py-6 pb-20 md:pb-6 md:pl-20">
-        <main>
-          {renderContent()}
-        </main>
-      </div>
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <TopNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <main>
+        {renderContent()}
+      </main>
     </div>
   );
 };

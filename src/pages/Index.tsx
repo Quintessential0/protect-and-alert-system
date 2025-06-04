@@ -6,9 +6,9 @@ import AuthForm from '@/components/AuthForm';
 import TopNavigation from '@/components/TopNavigation';
 import LandingPage from '@/components/LandingPage';
 import CoreFeatures from '@/components/CoreFeatures';
+import AdminHome from '@/components/AdminHome';
 import Community from '@/components/Community';
 import ContentRenderer from '@/components/dashboard/ContentRenderer';
-import AlertSystem from '@/components/AlertSystem';
 import EmergencyButton from '@/components/EmergencyButton';
 import ScreamDetection from '@/components/ScreamDetection';
 import { useToast } from '@/hooks/use-toast';
@@ -60,15 +60,21 @@ const Index = () => {
       return (
         <div className="container mx-auto px-4 py-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to SafeGuard</h1>
-            <p className="text-gray-600">Your personal safety dashboard</p>
+            {userRole === 'admin' ? (
+              <AdminHome onFeatureSelect={setActiveTab} />
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to SafeGuard</h1>
+                <p className="text-gray-600 mb-8">Your personal safety dashboard</p>
+                <CoreFeatures onFeatureSelect={setActiveTab} />
+              </>
+            )}
           </div>
-          <CoreFeatures onFeatureSelect={setActiveTab} />
         </div>
       );
     }
 
-    if (activeTab === 'sos') {
+    if (activeTab === 'sos' && userRole === 'user') {
       return (
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-center">
@@ -78,15 +84,16 @@ const Index = () => {
       );
     }
 
-    if (activeTab === 'alerts') {
+    if (activeTab === 'community' && userRole === 'user') {
       return (
         <div className="container mx-auto px-4 py-6">
-          <AlertSystem />
+          <Community />
         </div>
       );
     }
 
-    if (activeTab === 'community' && userRole === 'user') {
+    // Admin-specific community with posting capabilities
+    if (activeTab === 'community' && userRole === 'admin') {
       return (
         <div className="container mx-auto px-4 py-6">
           <Community />
@@ -108,17 +115,19 @@ const Index = () => {
         {renderContent()}
       </main>
       
-      {/* Background scream detection after SOS */}
-      <ScreamDetection 
-        isActive={isSOSActive} 
-        onDetection={() => {
-          toast({
-            title: "Distress Detected",
-            description: "Additional alert sent based on audio detection.",
-            variant: "destructive",
-          });
-        }} 
-      />
+      {/* Background scream detection after SOS - only for users */}
+      {userRole === 'user' && (
+        <ScreamDetection 
+          isActive={isSOSActive} 
+          onDetection={() => {
+            toast({
+              title: "Distress Detected",
+              description: "Additional alert sent based on audio detection.",
+              variant: "destructive",
+            });
+          }} 
+        />
+      )}
     </div>
   );
 };

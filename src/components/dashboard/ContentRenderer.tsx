@@ -8,13 +8,13 @@ import IncidentReporting from '@/components/IncidentReporting';
 import FakeCallScheduler from '@/components/FakeCallScheduler';
 import SafeZoneManager from '@/components/SafeZoneManager';
 import SafeZonesViewOnly from '@/components/SafeZonesViewOnly';
-import UserRecordingsView from '@/components/UserRecordingsView';
-import UserContactsView from '@/components/UserContactsView';
+import UserInfo from '@/components/UserInfo';
 import AdminRequests from '@/components/AdminRequests';
 import GovernmentRequests from '@/components/GovernmentRequests';
 import ChatbotSupport from '@/components/ChatbotSupport';
 import SafetyResourceDirectory from '@/components/SafetyResourceDirectory';
 import ActivityHistory from '@/components/ActivityHistory';
+import AlertSystem from '@/components/AlertSystem';
 
 interface ContentRendererProps {
   activeTab: string;
@@ -39,10 +39,8 @@ const ContentRenderer = ({ activeTab, userRole }: ContentRendererProps) => {
       return <ChatbotSupport />;
     case 'settings':
       return <Settings />;
-    case 'user-recordings':
-      return <UserRecordingsView />;
-    case 'user-contacts':
-      return <UserContactsView />;
+    case 'user-info':
+      return <UserInfo />;
     case 'admin-requests':
       return <AdminRequests />;
     case 'govt-requests':
@@ -51,6 +49,8 @@ const ContentRenderer = ({ activeTab, userRole }: ContentRendererProps) => {
       return <SafetyResourceDirectory />;
     case 'activity':
       return <ActivityHistory />;
+    case 'alerts':
+      return <AlertSystem />;
     default:
       return (
         <div className="bg-white rounded-xl shadow-lg p-6">

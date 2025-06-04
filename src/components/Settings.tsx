@@ -2,9 +2,14 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Shield, User, Bell, Mic } from 'lucide-react';
 import VoiceCommands from '@/components/VoiceCommands';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 const Settings = () => {
   const [activeSection, setActiveSection] = useState('general');
+  const { user } = useAuth();
+  const { profile } = useProfile(user);
+  const userRole = profile?.role || 'user';
 
   const settingsGroups = [
     {
@@ -38,10 +43,18 @@ const Settings = () => {
     }
   ];
 
-  const sections = [
-    { id: 'general', label: 'General Settings' },
-    { id: 'voice', label: 'Voice Commands' }
-  ];
+  // Filter sections based on user role
+  const getSectionsForRole = (role: string) => {
+    if (role === 'admin' || role === 'govt_admin') {
+      return [{ id: 'general', label: 'General Settings' }];
+    }
+    return [
+      { id: 'general', label: 'General Settings' },
+      { id: 'voice', label: 'Voice Commands' }
+    ];
+  };
+
+  const sections = getSectionsForRole(userRole);
 
   const renderGeneralSettings = () => (
     <div className="space-y-6">
@@ -100,15 +113,17 @@ const Settings = () => {
             </div>
           </button>
           
-          <button className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Emergency Plan</div>
-                <div className="text-sm text-gray-600">Set up your emergency response plan</div>
+          {userRole === 'user' && (
+            <button className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium text-gray-900">Emergency Plan</div>
+                  <div className="text-sm text-gray-600">Set up your emergency response plan</div>
+                </div>
+                <div className="text-gray-400">›</div>
               </div>
-              <div className="text-gray-400">›</div>
-            </div>
-          </button>
+            </button>
+          )}
           
           <button className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200">
             <div className="flex items-center justify-between">
@@ -136,9 +151,11 @@ const Settings = () => {
           <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
             <div className="font-medium text-gray-900">Report a Bug</div>
           </button>
-          <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
-            <div className="font-medium text-emergency-600">Emergency Hotlines</div>
-          </button>
+          {userRole === 'user' && (
+            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
+              <div className="font-medium text-emergency-600">Emergency Hotlines</div>
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -146,25 +163,27 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
-      {/* Section Tabs */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex space-x-4">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeSection === section.id
-                  ? 'bg-emergency-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {section.id === 'voice' && <Mic className="w-4 h-4" />}
-              <span>{section.label}</span>
-            </button>
-          ))}
+      {/* Section Tabs - Only show if user has multiple sections */}
+      {sections.length > 1 && (
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="flex space-x-4">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeSection === section.id
+                    ? 'bg-emergency-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {section.id === 'voice' && <Mic className="w-4 h-4" />}
+                <span>{section.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
       {activeSection === 'general' ? renderGeneralSettings() : <VoiceCommands />}

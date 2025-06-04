@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Shield, Send, AlertCircle, MapPin, Database } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -6,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 
 const AdminRequests = () => {
-  const [activeTab, setActiveTab] = useState<'zone-request' | 'data-access'>('zone-request');
+  const [activeTab, setActiveTab] = useState<'zone-request' | 'data-modification'>('zone-request');
   const [zoneRequest, setZoneRequest] = useState({
     location: '',
     reason: '',
@@ -17,12 +16,13 @@ const AdminRequests = () => {
     radius_meters: '500'
   });
   
-  const [dataAccessRequest, setDataAccessRequest] = useState({
+  const [dataModificationRequest, setDataModificationRequest] = useState({
     title: '',
     description: '',
     urgency: 'medium',
     dataType: 'user_locations',
-    timeframe: '30_days'
+    timeframe: '30_days',
+    modificationType: 'view'
   });
   
   const { toast } = useToast();
@@ -56,26 +56,27 @@ const AdminRequests = () => {
     });
   };
 
-  const handleDataAccessRequest = async (e: React.FormEvent) => {
+  const handleDataModificationRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Data Access Request:', {
-      ...dataAccessRequest,
+    console.log('Data Modification Request:', {
+      ...dataModificationRequest,
       requestedBy: user?.id,
       requestedAt: new Date().toISOString()
     });
     
     toast({
-      title: "Data Access Request Submitted",
-      description: "Your request has been sent to Government Officials for review.",
+      title: "Data Modification Request Submitted",
+      description: "Your request has been sent to Government Officials for approval.",
     });
     
-    setDataAccessRequest({
+    setDataModificationRequest({
       title: '',
       description: '',
       urgency: 'medium',
       dataType: 'user_locations',
-      timeframe: '30_days'
+      timeframe: '30_days',
+      modificationType: 'view'
     });
   };
 
@@ -94,7 +95,7 @@ const AdminRequests = () => {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Admin Requests</h2>
         <p className="text-gray-600 mb-6">
-          Submit requests to Government Officials for zone modifications and data access.
+          Submit requests to Government Officials for zone modifications and data access approvals.
         </p>
 
         {/* Tab Navigation */}
@@ -112,15 +113,15 @@ const AdminRequests = () => {
           </button>
           
           <button
-            onClick={() => setActiveTab('data-access')}
+            onClick={() => setActiveTab('data-modification')}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'data-access'
+              activeTab === 'data-modification'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             <Database className="w-4 h-4" />
-            <span>Data Access</span>
+            <span>Data Modification Access</span>
           </button>
         </div>
 
@@ -229,29 +230,29 @@ const AdminRequests = () => {
           </div>
         )}
 
-        {/* Data Access Request Tab */}
-        {activeTab === 'data-access' && (
+        {/* Data Modification Access Tab */}
+        {activeTab === 'data-modification' && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-green-900 mb-4">Request Data Access</h3>
-            <form onSubmit={handleDataAccessRequest} className="space-y-4">
+            <h3 className="text-lg font-semibold text-green-900 mb-4">Request Data Modification Access</h3>
+            <form onSubmit={handleDataModificationRequest} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Request Title</label>
                 <input
                   type="text"
-                  value={dataAccessRequest.title}
-                  onChange={(e) => setDataAccessRequest({...dataAccessRequest, title: e.target.value})}
+                  value={dataModificationRequest.title}
+                  onChange={(e) => setDataModificationRequest({...dataModificationRequest, title: e.target.value})}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="e.g., Safety Analysis for Downtown Area"
+                  placeholder="e.g., User Data Review for Safety Analysis"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Data Type</label>
                   <select
-                    value={dataAccessRequest.dataType}
-                    onChange={(e) => setDataAccessRequest({...dataAccessRequest, dataType: e.target.value})}
+                    value={dataModificationRequest.dataType}
+                    onChange={(e) => setDataModificationRequest({...dataModificationRequest, dataType: e.target.value})}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   >
                     <option value="user_locations">User Location Data</option>
@@ -262,10 +263,23 @@ const AdminRequests = () => {
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Modification Type</label>
+                  <select
+                    value={dataModificationRequest.modificationType}
+                    onChange={(e) => setDataModificationRequest({...dataModificationRequest, modificationType: e.target.value})}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="view">View Only</option>
+                    <option value="edit">Edit/Modify</option>
+                    <option value="delete">Delete</option>
+                    <option value="export">Export Data</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Timeframe</label>
                   <select
-                    value={dataAccessRequest.timeframe}
-                    onChange={(e) => setDataAccessRequest({...dataAccessRequest, timeframe: e.target.value})}
+                    value={dataModificationRequest.timeframe}
+                    onChange={(e) => setDataModificationRequest({...dataModificationRequest, timeframe: e.target.value})}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   >
                     <option value="7_days">Last 7 days</option>
@@ -281,8 +295,8 @@ const AdminRequests = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Urgency Level</label>
                 <select
-                  value={dataAccessRequest.urgency}
-                  onChange={(e) => setDataAccessRequest({...dataAccessRequest, urgency: e.target.value})}
+                  value={dataModificationRequest.urgency}
+                  onChange={(e) => setDataModificationRequest({...dataModificationRequest, urgency: e.target.value})}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 >
                   <option value="low">Low - Research/Analysis</option>
@@ -295,11 +309,11 @@ const AdminRequests = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Purpose & Justification</label>
                 <textarea
-                  value={dataAccessRequest.description}
-                  onChange={(e) => setDataAccessRequest({...dataAccessRequest, description: e.target.value})}
+                  value={dataModificationRequest.description}
+                  onChange={(e) => setDataModificationRequest({...dataModificationRequest, description: e.target.value})}
                   rows={4}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Explain why you need access to this data, how it will be used, and what safety benefits it will provide..."
+                  placeholder="Explain why you need access to modify this data, how it will be used, and what safety benefits it will provide..."
                   required
                 />
               </div>
@@ -309,7 +323,7 @@ const AdminRequests = () => {
                 className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
               >
                 <Send className="w-4 h-4" />
-                <span>Submit Data Access Request</span>
+                <span>Submit Data Modification Request</span>
               </button>
             </form>
           </div>
@@ -323,7 +337,7 @@ const AdminRequests = () => {
         </div>
         <p className="text-red-800 text-sm">
           All requests are logged and require Government Official authorization. 
-          Requests will be reviewed based on community safety needs, data privacy requirements, and available resources.
+          Data modification requests will be reviewed based on privacy requirements, safety needs, and compliance standards.
         </p>
       </div>
     </div>

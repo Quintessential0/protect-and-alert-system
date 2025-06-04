@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Shield, User, ChevronDown, Settings, LogOut, Clock, FileText } from 'lucide-react';
+import { Shield, User, ChevronDown, Settings, LogOut, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 
@@ -25,37 +25,39 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
   };
 
   const getNavItemsForRole = (role: string) => {
-    const baseItems = [
-      { id: 'home', label: 'Home' },
-      { id: 'incident-report', label: 'Report' },
-      { id: 'chatbot', label: 'Chatbot' },
-    ];
-
     if (role === 'user') {
       return [
-        ...baseItems,
+        { id: 'home', label: 'Home' },
+        { id: 'incident-report', label: 'Report' },
+        { id: 'chatbot', label: 'Chatbot' },
         { id: 'community', label: 'Community' },
       ];
     }
 
     if (role === 'admin') {
       return [
-        ...baseItems,
-        { id: 'user-recordings', label: 'User Media' },
-        { id: 'user-contacts', label: 'User Contacts' },
+        { id: 'home', label: 'Home' },
+        { id: 'incident-report', label: 'Reports' },
+        { id: 'user-info', label: 'User Info' },
         { id: 'admin-requests', label: 'Requests' },
       ];
     }
 
     if (role === 'govt_admin') {
       return [
-        ...baseItems,
+        { id: 'home', label: 'Home' },
+        { id: 'incident-report', label: 'Report' },
+        { id: 'chatbot', label: 'Chatbot' },
         { id: 'govt-requests', label: 'Review Requests' },
         { id: 'safezones', label: 'Manage Zones' },
       ];
     }
 
-    return baseItems;
+    return [
+      { id: 'home', label: 'Home' },
+      { id: 'incident-report', label: 'Report' },
+      { id: 'chatbot', label: 'Chatbot' },
+    ];
   };
 
   const navItems = getNavItemsForRole(userRole);

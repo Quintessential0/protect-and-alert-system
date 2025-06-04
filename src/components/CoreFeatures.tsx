@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MapPin, Users, Video, Phone, Home, BookOpen, AlertTriangle } from 'lucide-react';
+import { MapPin, Users, Video, Phone, Home, BookOpen, AlertTriangle, Bell } from 'lucide-react';
 
 interface CoreFeaturesProps {
   onFeatureSelect: (featureId: string) => void;
@@ -49,25 +49,40 @@ const CoreFeatures = ({ onFeatureSelect }: CoreFeaturesProps) => {
       description: 'Access safety guides',
       icon: BookOpen,
       color: 'bg-red-500 hover:bg-red-600'
+    },
+    {
+      id: 'alerts',
+      title: 'Alerts',
+      description: 'View safety alerts',
+      icon: Bell,
+      color: 'bg-yellow-500 hover:bg-yellow-600'
     }
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Emergency Alert Button */}
-      <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-        <button
-          onClick={() => onFeatureSelect('alerts')}
-          className="w-full bg-emergency-600 text-white py-6 px-8 rounded-xl hover:bg-emergency-700 transition-colors"
-        >
-          <div className="flex items-center justify-center space-x-3">
-            <AlertTriangle className="w-8 h-8" />
-            <div>
-              <h3 className="text-2xl font-bold">Emergency Alert</h3>
-              <p className="text-emergency-100">Tap for immediate help</p>
+    <div className="space-y-8">
+      {/* SOS Button - styled like the uploaded image */}
+      <div className="flex justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <button
+            onClick={() => onFeatureSelect('sos')}
+            className="w-48 h-48 rounded-full bg-gradient-to-br from-red-500 to-red-600 shadow-2xl transform transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center group relative"
+            aria-label="Emergency SOS Button"
+          >
+            {/* Outer glow effect */}
+            <div className="absolute inset-0 rounded-full bg-red-500 opacity-30 animate-pulse scale-110"></div>
+            
+            <div className="text-center text-white z-10">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-2 group-hover:animate-bounce" />
+              <div className="text-2xl font-bold">SOS</div>
+              <div className="text-sm opacity-90">Tap for Help</div>
             </div>
-          </div>
-        </button>
+          </button>
+          
+          <p className="text-center text-gray-600 max-w-sm text-sm">
+            Press the SOS button to send an emergency alert to your contacts and share your location.
+          </p>
+        </div>
       </div>
 
       {/* Core Features Grid */}

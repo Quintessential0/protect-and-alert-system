@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Shield, User, ChevronDown, Settings, LogOut, Clock } from 'lucide-react';
+import { Shield, User, ChevronDown, Settings, LogOut, Clock, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 
@@ -27,7 +27,7 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
   const getNavItemsForRole = (role: string) => {
     const baseItems = [
       { id: 'home', label: 'Home' },
-      { id: 'alerts', label: 'Alerts' },
+      { id: 'incident-report', label: 'Report' },
       { id: 'chatbot', label: 'Chatbot' },
     ];
 
@@ -93,7 +93,7 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
             className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <User className="w-5 h-5" />
-            <span className="hidden sm:block">Profile</span>
+            <span className="hidden sm:block">{profile?.full_name || user?.email || 'Profile'}</span>
             <ChevronDown className="w-4 h-4" />
           </button>
 

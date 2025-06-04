@@ -9,6 +9,8 @@ import CoreFeatures from '@/components/CoreFeatures';
 import Community from '@/components/Community';
 import ContentRenderer from '@/components/dashboard/ContentRenderer';
 import AlertSystem from '@/components/AlertSystem';
+import EmergencyButton from '@/components/EmergencyButton';
+import ScreamDetection from '@/components/ScreamDetection';
 import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
@@ -16,10 +18,12 @@ const Index = () => {
   const { profile } = useProfile(user);
   const [activeTab, setActiveTab] = useState('home');
   const [showAuth, setShowAuth] = useState(false);
+  const [isSOSActive, setIsSOSActive] = useState(false);
   const { toast } = useToast();
 
   const handleEmergencyTrigger = (incidentId: string) => {
     console.log('Emergency triggered with incident ID:', incidentId);
+    setIsSOSActive(true);
     toast({
       title: "Emergency Alert Sent!",
       description: "Your emergency contacts have been notified.",
@@ -64,6 +68,16 @@ const Index = () => {
       );
     }
 
+    if (activeTab === 'sos') {
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-center">
+            <EmergencyButton onEmergencyTrigger={handleEmergencyTrigger} />
+          </div>
+        </div>
+      );
+    }
+
     if (activeTab === 'alerts') {
       return (
         <div className="container mx-auto px-4 py-6">
@@ -93,6 +107,18 @@ const Index = () => {
       <main>
         {renderContent()}
       </main>
+      
+      {/* Background scream detection after SOS */}
+      <ScreamDetection 
+        isActive={isSOSActive} 
+        onDetection={() => {
+          toast({
+            title: "Distress Detected",
+            description: "Additional alert sent based on audio detection.",
+            variant: "destructive",
+          });
+        }} 
+      />
     </div>
   );
 };

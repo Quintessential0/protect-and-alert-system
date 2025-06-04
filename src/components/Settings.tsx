@@ -1,8 +1,11 @@
 
-import React from 'react';
-import { Settings as SettingsIcon, Shield, User, Smartphone, MapPin, Bell } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings as SettingsIcon, Shield, User, Bell, Mic } from 'lucide-react';
+import VoiceCommands from '@/components/VoiceCommands';
 
 const Settings = () => {
+  const [activeSection, setActiveSection] = useState('general');
+
   const settingsGroups = [
     {
       title: 'Safety & Security',
@@ -35,7 +38,12 @@ const Settings = () => {
     }
   ];
 
-  return (
+  const sections = [
+    { id: 'general', label: 'General Settings' },
+    { id: 'voice', label: 'Voice Commands' }
+  ];
+
+  const renderGeneralSettings = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center space-x-3 mb-6">
@@ -77,6 +85,7 @@ const Settings = () => {
         </div>
       </div>
 
+      {/* Account Settings */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">Account</h3>
         
@@ -113,6 +122,7 @@ const Settings = () => {
         </div>
       </div>
 
+      {/* Support */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">Support</h3>
         
@@ -131,6 +141,33 @@ const Settings = () => {
           </button>
         </div>
       </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Section Tabs */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex space-x-4">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => setActiveSection(section.id)}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeSection === section.id
+                  ? 'bg-emergency-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {section.id === 'voice' && <Mic className="w-4 h-4" />}
+              <span>{section.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      {activeSection === 'general' ? renderGeneralSettings() : <VoiceCommands />}
     </div>
   );
 };

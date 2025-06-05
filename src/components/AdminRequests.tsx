@@ -1,344 +1,261 @@
-import React, { useState } from 'react';
-import { Shield, Send, AlertCircle, MapPin, Database } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
+import { Plus, Send, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfile } from '@/hooks/useProfile';
 
 const AdminRequests = () => {
-  const [activeTab, setActiveTab] = useState<'zone-request' | 'data-modification'>('zone-request');
-  const [zoneRequest, setZoneRequest] = useState({
-    location: '',
-    reason: '',
-    zoneType: 'safe',
-    urgency: 'medium',
-    center_lat: '',
-    center_lng: '',
-    radius_meters: '500'
-  });
-  
-  const [dataModificationRequest, setDataModificationRequest] = useState({
+  const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [newRequest, setNewRequest] = useState({
+    type: 'zone_update',
     title: '',
     description: '',
-    urgency: 'medium',
-    dataType: 'user_locations',
-    timeframe: '30_days',
-    modificationType: 'view'
+    targetId: '',
+    requestData: {}
   });
-  
   const { toast } = useToast();
   const { user } = useAuth();
-  const { profile } = useProfile(user);
-  
-  const userRole = profile?.role || 'user';
 
-  const handleZoneRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    console.log('Zone Request:', {
-      ...zoneRequest,
-      requestedBy: user?.id,
-      requestedAt: new Date().toISOString()
-    });
-    
-    toast({
-      title: "Zone Request Submitted",
-      description: "Your request has been sent to Government Officials for review.",
-    });
-    
-    setZoneRequest({
-      location: '',
-      reason: '',
-      zoneType: 'safe',
-      urgency: 'medium',
-      center_lat: '',
-      center_lng: '',
-      radius_meters: '500'
-    });
+  useEffect(() => {
+    fetchRequests();
+  }, []);
+
+  const fetchRequests = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setRequests(data || []);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load requests.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDataModificationRequest = async (e: React.FormEvent) => {
+  const submitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('Data Modification Request:', {
-      ...dataModificationRequest,
-      requestedBy: user?.id,
-      requestedAt: new Date().toISOString()
-    });
-    
-    toast({
-      title: "Data Modification Request Submitted",
-      description: "Your request has been sent to Government Officials for approval.",
-    });
-    
-    setDataModificationRequest({
-      title: '',
-      description: '',
-      urgency: 'medium',
-      dataType: 'user_locations',
-      timeframe: '30_days',
-      modificationType: 'view'
-    });
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('admin_requests')
+        .insert({
+          admin_id: user.id,
+          request_type: newRequest.type,
+          title: newRequest.title,
+          description: newRequest.description,
+          target_id: newRequest.targetId || null,
+          request_data: newRequest.requestData
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Request Submitted",
+        description: "Your request has been sent to the Government Administrator for review.",
+      });
+
+      setNewRequest({
+        type: 'zone_update',
+        title: '',
+        description: '',
+        targetId: '',
+        requestData: {}
+      });
+
+      fetchRequests();
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit request.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (userRole !== 'admin') {
-    return (
-      <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">Access Restricted</h3>
-        <p className="text-gray-600">Only administrators can access request features.</p>
-      </div>
-    );
-  }
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-600" />;
+      case 'approved':
+        return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'rejected':
+        return <XCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <Clock className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Admin Requests</h2>
-        <p className="text-gray-600 mb-6">
-          Submit requests to Government Officials for zone modifications and data access approvals.
-        </p>
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Admin Requests</h2>
 
         {/* Tab Navigation */}
         <div className="flex space-x-4 mb-6">
           <button
-            onClick={() => setActiveTab('zone-request')}
+            onClick={() => setActiveTab('create')}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'zone-request'
+              activeTab === 'create'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <MapPin className="w-4 h-4" />
-            <span>Zone Requests</span>
+            <Plus className="w-4 h-4" />
+            <span>Create Request</span>
           </button>
           
           <button
-            onClick={() => setActiveTab('data-modification')}
+            onClick={() => setActiveTab('view')}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'data-modification'
+              activeTab === 'view'
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <Database className="w-4 h-4" />
-            <span>Data Modification Access</span>
+            <Clock className="w-4 h-4" />
+            <span>My Requests ({requests.length})</span>
           </button>
         </div>
 
-        {/* Zone Request Tab */}
-        {activeTab === 'zone-request' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-4">Request Zone Creation/Modification</h3>
-            <form onSubmit={handleZoneRequest} className="space-y-4">
+        {/* Create Request Tab */}
+        {activeTab === 'create' && (
+          <form onSubmit={submitRequest} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Request Type
+              </label>
+              <select
+                value={newRequest.type}
+                onChange={(e) => setNewRequest({...newRequest, type: e.target.value})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="zone_update">Safe Zone Update</option>
+                <option value="data_modification">Data Modification</option>
+                <option value="resource_change">Resource Change Request</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Request Title
+              </label>
+              <input
+                type="text"
+                value={newRequest.title}
+                onChange={(e) => setNewRequest({...newRequest, title: e.target.value})}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Brief description of your request"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Detailed Description
+              </label>
+              <textarea
+                value={newRequest.description}
+                onChange={(e) => setNewRequest({...newRequest, description: e.target.value})}
+                rows={4}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Provide detailed information about your request..."
+                required
+              />
+            </div>
+
+            {newRequest.type === 'zone_update' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location/Area Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Zone ID (if updating existing zone)
+                </label>
                 <input
                   type="text"
-                  value={zoneRequest.location}
-                  onChange={(e) => setZoneRequest({...zoneRequest, location: e.target.value})}
+                  value={newRequest.targetId}
+                  onChange={(e) => setNewRequest({...newRequest, targetId: e.target.value})}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., Main Street Park, Downtown District"
-                  required
+                  placeholder="Leave empty for new zone creation"
                 />
               </div>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={zoneRequest.center_lat}
-                    onChange={(e) => setZoneRequest({...zoneRequest, center_lat: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., 40.7128"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={zoneRequest.center_lng}
-                    onChange={(e) => setZoneRequest({...zoneRequest, center_lng: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="e.g., -74.0060"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Radius (meters)</label>
-                  <input
-                    type="number"
-                    value={zoneRequest.radius_meters}
-                    onChange={(e) => setZoneRequest({...zoneRequest, radius_meters: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    min="100"
-                    placeholder="500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Zone Type</label>
-                <select
-                  value={zoneRequest.zoneType}
-                  onChange={(e) => setZoneRequest({...zoneRequest, zoneType: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="safe">Safe Zone</option>
-                  <option value="unsafe">Unsafe Zone</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Urgency Level</label>
-                <select
-                  value={zoneRequest.urgency}
-                  onChange={(e) => setZoneRequest({...zoneRequest, urgency: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="low">Low - Routine Update</option>
-                  <option value="medium">Medium - Important Change</option>
-                  <option value="high">High - Safety Concern</option>
-                  <option value="urgent">Urgent - Immediate Action Needed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reason/Justification</label>
-                <textarea
-                  value={zoneRequest.reason}
-                  onChange={(e) => setZoneRequest({...zoneRequest, reason: e.target.value})}
-                  rows={4}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Provide detailed reasoning for this zone request..."
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
-              >
-                <Send className="w-4 h-4" />
-                <span>Submit Zone Request</span>
-              </button>
-            </form>
-          </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
+            >
+              <Send className="w-4 h-4" />
+              <span>{loading ? 'Submitting...' : 'Submit Request'}</span>
+            </button>
+          </form>
         )}
 
-        {/* Data Modification Access Tab */}
-        {activeTab === 'data-modification' && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-green-900 mb-4">Request Data Modification Access</h3>
-            <form onSubmit={handleDataModificationRequest} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Request Title</label>
-                <input
-                  type="text"
-                  value={dataModificationRequest.title}
-                  onChange={(e) => setDataModificationRequest({...dataModificationRequest, title: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="e.g., User Data Review for Safety Analysis"
-                  required
-                />
-              </div>
+        {/* View Requests Tab */}
+        {activeTab === 'view' && (
+          <div className="space-y-4">
+            {requests.length > 0 ? (
+              requests.map((request) => (
+                <div key={request.id} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{request.title}</h3>
+                      <p className="text-sm text-gray-600 capitalize">{request.request_type.replace('_', ' ')}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(request.status)}
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(request.status)}`}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Data Type</label>
-                  <select
-                    value={dataModificationRequest.dataType}
-                    onChange={(e) => setDataModificationRequest({...dataModificationRequest, dataType: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  >
-                    <option value="user_locations">User Location Data</option>
-                    <option value="incident_reports">Incident Reports</option>
-                    <option value="emergency_incidents">Emergency Incidents</option>
-                    <option value="recordings">Audio/Video Recordings</option>
-                    <option value="aggregated_stats">Aggregated Statistics</option>
-                  </select>
+                  <p className="text-gray-700 mb-3">{request.description}</p>
+
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>Submitted: {new Date(request.created_at).toLocaleDateString()}</span>
+                    {request.reviewed_at && (
+                      <span>Reviewed: {new Date(request.reviewed_at).toLocaleDateString()}</span>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Modification Type</label>
-                  <select
-                    value={dataModificationRequest.modificationType}
-                    onChange={(e) => setDataModificationRequest({...dataModificationRequest, modificationType: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  >
-                    <option value="view">View Only</option>
-                    <option value="edit">Edit/Modify</option>
-                    <option value="delete">Delete</option>
-                    <option value="export">Export Data</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Timeframe</label>
-                  <select
-                    value={dataModificationRequest.timeframe}
-                    onChange={(e) => setDataModificationRequest({...dataModificationRequest, timeframe: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  >
-                    <option value="7_days">Last 7 days</option>
-                    <option value="30_days">Last 30 days</option>
-                    <option value="90_days">Last 90 days</option>
-                    <option value="6_months">Last 6 months</option>
-                    <option value="1_year">Last year</option>
-                    <option value="all_time">All time</option>
-                  </select>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Requests Yet</h3>
+                <p className="text-gray-600">You haven't submitted any requests. Create your first request above.</p>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Urgency Level</label>
-                <select
-                  value={dataModificationRequest.urgency}
-                  onChange={(e) => setDataModificationRequest({...dataModificationRequest, urgency: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="low">Low - Research/Analysis</option>
-                  <option value="medium">Medium - Operational Need</option>
-                  <option value="high">High - Safety Critical</option>
-                  <option value="urgent">Urgent - Emergency Response</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Purpose & Justification</label>
-                <textarea
-                  value={dataModificationRequest.description}
-                  onChange={(e) => setDataModificationRequest({...dataModificationRequest, description: e.target.value})}
-                  rows={4}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  placeholder="Explain why you need access to modify this data, how it will be used, and what safety benefits it will provide..."
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
-              >
-                <Send className="w-4 h-4" />
-                <span>Submit Data Modification Request</span>
-              </button>
-            </form>
+            )}
           </div>
         )}
-      </div>
-
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <div className="flex items-center space-x-2 mb-2">
-          <AlertCircle className="w-5 h-5 text-red-600" />
-          <h4 className="font-medium text-red-900">Important Notice</h4>
-        </div>
-        <p className="text-red-800 text-sm">
-          All requests are logged and require Government Official authorization. 
-          Data modification requests will be reviewed based on privacy requirements, safety needs, and compliance standards.
-        </p>
       </div>
     </div>
   );

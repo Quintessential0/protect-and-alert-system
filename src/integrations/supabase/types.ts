@@ -9,6 +9,111 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          description: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          description: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_requests: {
+        Row: {
+          admin_id: string
+          created_at: string
+          description: string | null
+          id: string
+          request_data: Json | null
+          request_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          request_data?: Json | null
+          request_type: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          request_data?: Json | null
+          request_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          id: string
+          message: string
+          response: string | null
+          user_id: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          response?: string | null
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          response?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       danger_reports: {
         Row: {
           danger_type: string
@@ -150,6 +255,54 @@ export type Database = {
           is_instant?: boolean | null
           scheduled_time?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      government_requests: {
+        Row: {
+          created_at: string
+          description: string | null
+          government_admin_id: string
+          handled_at: string | null
+          handled_by: string | null
+          id: string
+          request_data: Json | null
+          request_type: string
+          response_data: Json | null
+          status: string
+          target_user_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          government_admin_id: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          request_data?: Json | null
+          request_type: string
+          response_data?: Json | null
+          status?: string
+          target_user_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          government_admin_id?: string
+          handled_at?: string | null
+          handled_by?: string | null
+          id?: string
+          request_data?: Json | null
+          request_type?: string
+          response_data?: Json | null
+          status?: string
+          target_user_id?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -592,6 +745,60 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_content: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          category: string
+          content_type: string
+          created_at: string
+          description: string | null
+          file_url: string | null
+          id: string
+          is_official: boolean | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+          uploaded_by: string
+          visibility: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category: string
+          content_type: string
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_official?: boolean | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          uploaded_by: string
+          visibility?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          is_official?: boolean | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+          visibility?: string
         }
         Relationships: []
       }

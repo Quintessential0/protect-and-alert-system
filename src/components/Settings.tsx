@@ -1,192 +1,264 @@
 
-import React, { useState } from 'react';
-import { Settings as SettingsIcon, Shield, User, Bell, Mic } from 'lucide-react';
-import VoiceCommands from '@/components/VoiceCommands';
+import React, { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, Save, Bell, Shield, Volume2, Eye, Phone } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
 
 const Settings = () => {
-  const [activeSection, setActiveSection] = useState('general');
   const { user } = useAuth();
-  const { profile } = useProfile(user);
+  const { profile, updateProfile } = useProfile(user);
+  const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState({
+    location_permissions_granted: false,
+    sos_gesture_enabled: true,
+    voice_monitoring_enabled: false,
+    emergency_notifications: true,
+    privacy_mode: false,
+    auto_record_sos: true,
+    emergency_contacts_visible: true
+  });
+  const { toast } = useToast();
+
   const userRole = profile?.role || 'user';
 
-  const settingsGroups = [
-    {
-      title: 'Safety & Security',
-      icon: Shield,
-      settings: [
-        { name: 'Auto Emergency Detection', description: 'Automatically detect emergencies', enabled: true },
-        { name: 'Location Services', description: 'Share location during emergencies', enabled: true },
-        { name: 'Audio Recording', description: 'Record audio during SOS activation', enabled: false },
-        { name: 'Video Recording', description: 'Record video during SOS activation', enabled: false },
-      ]
-    },
-    {
-      title: 'Notifications',
-      icon: Bell,
-      settings: [
-        { name: 'Push Notifications', description: 'Receive safety alerts and updates', enabled: true },
-        { name: 'Emergency Alerts', description: 'High priority emergency notifications', enabled: true },
-        { name: 'Location Warnings', description: 'Alerts when entering unsafe areas', enabled: true },
-        { name: 'Contact Notifications', description: 'Notify when contacts trigger SOS', enabled: true },
-      ]
-    },
-    {
-      title: 'Privacy',
-      icon: User,
-      settings: [
-        { name: 'Location History', description: 'Store location history for safety', enabled: true },
-        { name: 'Anonymous Reporting', description: 'Report incidents anonymously', enabled: false },
-        { name: 'Data Sharing', description: 'Share safety data for community insights', enabled: false },
-      ]
+  useEffect(() => {
+    if (profile) {
+      setSettings({
+        location_permissions_granted: profile.location_permissions_granted || false,
+        sos_gesture_enabled: profile.sos_gesture_enabled || false,
+        voice_monitoring_enabled: profile.voice_monitoring_enabled || false,
+        emergency_notifications: true,
+        privacy_mode: false,
+        auto_record_sos: true,
+        emergency_contacts_visible: true
+      });
     }
-  ];
+  }, [profile]);
 
-  // Filter sections based on user role - remove voice commands for admin roles
-  const getSectionsForRole = (role: string) => {
-    if (role === 'admin' || role === 'govt_admin') {
-      return [{ id: 'general', label: 'General Settings' }];
+  const logActivity = async (action: string, description: string) => {
+    try {
+      await supabase
+        .from('activity_logs')
+        .insert({
+          user_id: user?.id,
+          action_type: action,
+          description: description
+        });
+    } catch (error) {
+      console.error('Error logging activity:', error);
     }
-    return [
-      { id: 'general', label: 'General Settings' },
-      { id: 'voice', label: 'Voice Commands' }
-    ];
   };
 
-  const sections = getSectionsForRole(userRole);
+  const handleSettingChange = async (setting: string, value: boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      [setting]: value
+    }));
 
-  const renderGeneralSettings = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="flex items-center space-x-3 mb-6">
-          <SettingsIcon className="w-6 h-6 text-emergency-600" />
-          <h2 className="text-xl font-bold text-gray-900">Settings</h2>
-        </div>
+    // Handle special cases
+    if (setting === 'location_permissions_granted' && value) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            toast({
+              title: "Location Access Granted",
+              description: "Location services are now enabled for emergency features.",
+            });
+          },
+          () => {
+            setSettings(prev => ({
+              ...prev,
+              location_permissions_granted: false
+            }));
+            toast({
+              title: "Location Access Denied",
+              description: "Please enable location services in your browser settings.",
+              variant: "destructive",
+            });
+          }
+        );
+      }
+    }
 
-        <div className="space-y-6">
-          {settingsGroups.map((group, groupIndex) => {
-            const GroupIcon = group.icon;
-            return (
-              <div key={groupIndex} className="border-b border-gray-200 last:border-b-0 pb-6 last:pb-0">
-                <div className="flex items-center space-x-2 mb-4">
-                  <GroupIcon className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">{group.title}</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  {group.settings.map((setting, settingIndex) => (
-                    <div key={settingIndex} className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900">{setting.name}</div>
-                        <div className="text-sm text-gray-600">{setting.description}</div>
-                      </div>
-                      
-                      <div className={`w-12 h-6 rounded-full relative transition-all duration-200 ${
-                        setting.enabled ? 'bg-safe-500' : 'bg-gray-300'
-                      }`}>
-                        <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 shadow transition-all duration-200 ${
-                          setting.enabled ? 'right-0.5' : 'left-0.5'
-                        }`}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    if (setting === 'voice_monitoring_enabled' && userRole === 'user') {
+      if (value) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(track => track.stop());
+          toast({
+            title: "Voice Monitoring Enabled",
+            description: "Voice monitoring will activate during emergencies.",
+          });
+        } catch (error) {
+          setSettings(prev => ({
+            ...prev,
+            voice_monitoring_enabled: false
+          }));
+          toast({
+            title: "Microphone Access Denied",
+            description: "Please enable microphone access for voice monitoring.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
 
-      {/* Account Settings */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Account</h3>
-        
-        <div className="space-y-4">
-          <button className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Profile Information</div>
-                <div className="text-sm text-gray-600">Update your personal details</div>
-              </div>
-              <div className="text-gray-400">›</div>
-            </div>
-          </button>
-          
-          {userRole === 'user' && (
-            <button className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-medium text-gray-900">Emergency Plan</div>
-                  <div className="text-sm text-gray-600">Set up your emergency response plan</div>
-                </div>
-                <div className="text-gray-400">›</div>
-              </div>
-            </button>
-          )}
-          
-          <button className="w-full text-left p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Data & Privacy</div>
-                <div className="text-sm text-gray-600">Manage your data and privacy settings</div>
-              </div>
-              <div className="text-gray-400">›</div>
-            </div>
-          </button>
-        </div>
-      </div>
+    await logActivity('settings_change', `Changed ${setting} to ${value}`);
+  };
 
-      {/* Support */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Support</h3>
-        
-        <div className="space-y-3">
-          <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
-            <div className="font-medium text-gray-900">Help Center</div>
-          </button>
-          <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
-            <div className="font-medium text-gray-900">Contact Support</div>
-          </button>
-          <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
-            <div className="font-medium text-gray-900">Report a Bug</div>
-          </button>
-          {userRole === 'user' && (
-            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-all duration-200">
-              <div className="font-medium text-emergency-600">Emergency Hotlines</div>
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  const saveSettings = async () => {
+    if (!profile || !updateProfile) return;
+
+    setLoading(true);
+    try {
+      const success = await updateProfile({
+        location_permissions_granted: settings.location_permissions_granted,
+        sos_gesture_enabled: settings.sos_gesture_enabled,
+        voice_monitoring_enabled: settings.voice_monitoring_enabled
+      });
+
+      if (success) {
+        await logActivity('settings_save', 'User settings updated successfully');
+        toast({
+          title: "Settings Saved",
+          description: "Your preferences have been updated successfully.",
+        });
+      } else {
+        throw new Error('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getSettingsForRole = () => {
+    const commonSettings = [
+      {
+        id: 'emergency_notifications',
+        title: 'Emergency Notifications',
+        description: 'Receive notifications about emergency alerts and updates',
+        icon: Bell,
+        value: settings.emergency_notifications
+      },
+      {
+        id: 'privacy_mode',
+        title: 'Privacy Mode',
+        description: 'Enhanced privacy settings for sensitive information',
+        icon: Eye,
+        value: settings.privacy_mode
+      }
+    ];
+
+    if (userRole === 'user') {
+      return [
+        {
+          id: 'location_permissions_granted',
+          title: 'Location Services',
+          description: 'Allow app to access your location for emergency features',
+          icon: Shield,
+          value: settings.location_permissions_granted
+        },
+        {
+          id: 'sos_gesture_enabled',
+          title: 'SOS Gesture',
+          description: 'Enable gesture-based emergency activation',
+          icon: Phone,
+          value: settings.sos_gesture_enabled
+        },
+        {
+          id: 'voice_monitoring_enabled',
+          title: 'Voice Monitoring',
+          description: 'Monitor for distress sounds during emergencies',
+          icon: Volume2,
+          value: settings.voice_monitoring_enabled
+        },
+        {
+          id: 'auto_record_sos',
+          title: 'Auto-Record on SOS',
+          description: 'Automatically start recording when SOS is triggered',
+          icon: Shield,
+          value: settings.auto_record_sos
+        },
+        ...commonSettings
+      ];
+    } else {
+      return [
+        ...commonSettings,
+        {
+          id: 'emergency_contacts_visible',
+          title: 'Emergency Contacts Access',
+          description: 'Allow access to user emergency contact information',
+          icon: Phone,
+          value: settings.emergency_contacts_visible
+        }
+      ];
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      {/* Section Tabs - Only show if user has multiple sections */}
-      {sections.length > 1 && (
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex space-x-4">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeSection === section.id
-                    ? 'bg-emergency-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {section.id === 'voice' && <Mic className="w-4 h-4" />}
-                <span>{section.label}</span>
-              </button>
-            ))}
-          </div>
+    <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+      <div className="flex items-center space-x-3">
+        <SettingsIcon className="w-6 h-6 text-gray-600" />
+        <h2 className="text-xl font-bold text-gray-900">Settings</h2>
+      </div>
+
+      <div className="space-y-4">
+        {getSettingsForRole().map((setting) => {
+          const Icon = setting.icon;
+          return (
+            <div key={setting.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex items-center space-x-4">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-900">{setting.title}</h3>
+                  <p className="text-sm text-gray-600">{setting.description}</p>
+                </div>
+              </div>
+              
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={setting.value}
+                  onChange={(e) => handleSettingChange(setting.id, e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          );
+        })}
+      </div>
+
+      {userRole === 'user' && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <h4 className="font-medium text-amber-900 mb-2">Emergency Features</h4>
+          <p className="text-amber-800 text-sm">
+            These settings control how the app responds during emergencies. 
+            Enabling location services and voice monitoring can significantly improve emergency response effectiveness.
+          </p>
         </div>
       )}
 
-      {/* Content */}
-      {activeSection === 'general' ? renderGeneralSettings() : <VoiceCommands />}
+      <button
+        onClick={saveSettings}
+        disabled={loading}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
+      >
+        <Save className="w-4 h-4" />
+        <span>{loading ? 'Saving...' : 'Save Settings'}</span>
+      </button>
     </div>
   );
 };

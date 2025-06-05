@@ -46,8 +46,7 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
     if (role === 'govt_admin') {
       return [
         { id: 'home', label: 'Home' },
-        { id: 'incident-report', label: 'Report' },
-        { id: 'chatbot', label: 'Chatbot' },
+        { id: 'incident-report', label: 'Reports' },
         { id: 'govt-requests', label: 'Review Requests' },
         { id: 'safezones', label: 'Manage Zones' },
       ];
@@ -95,7 +94,7 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
             className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <User className="w-5 h-5" />
-            <span className="hidden sm:block">{profile?.full_name || user?.email || 'Profile'}</span>
+            <span className="hidden sm:block">{profile?.full_name || user?.email?.split('@')[0] || 'Profile'}</span>
             <ChevronDown className="w-4 h-4" />
           </button>
 
@@ -112,16 +111,18 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </button>
-                <button
-                  onClick={() => {
-                    onTabChange('activity');
-                    setShowProfileMenu(false);
-                  }}
-                  className="flex items-center space-x-2 w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
-                >
-                  <Clock className="w-4 h-4" />
-                  <span>Activity Log</span>
-                </button>
+                {userRole === 'user' && (
+                  <button
+                    onClick={() => {
+                      onTabChange('activity');
+                      setShowProfileMenu(false);
+                    }}
+                    className="flex items-center space-x-2 w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Activity Log</span>
+                  </button>
+                )}
                 <hr className="my-1" />
                 <button
                   onClick={handleSignOut}

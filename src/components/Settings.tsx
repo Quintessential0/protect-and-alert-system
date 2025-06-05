@@ -43,7 +43,7 @@ const Settings = () => {
     }
   ];
 
-  // Filter sections based on user role
+  // Filter sections based on user role - remove voice commands for admin roles
   const getSectionsForRole = (role: string) => {
     if (role === 'admin' || role === 'govt_admin') {
       return [{ id: 'general', label: 'General Settings' }];

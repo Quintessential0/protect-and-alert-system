@@ -7,6 +7,7 @@ import TopNavigation from '@/components/TopNavigation';
 import LandingPage from '@/components/LandingPage';
 import CoreFeatures from '@/components/CoreFeatures';
 import AdminHome from '@/components/AdminHome';
+import GovernmentAdminHome from '@/components/GovernmentAdminHome';
 import Community from '@/components/Community';
 import ContentRenderer from '@/components/dashboard/ContentRenderer';
 import EmergencyButton from '@/components/EmergencyButton';
@@ -62,6 +63,8 @@ const Index = () => {
           <div className="mb-8">
             {userRole === 'admin' ? (
               <AdminHome onFeatureSelect={setActiveTab} />
+            ) : userRole === 'govt_admin' ? (
+              <GovernmentAdminHome onFeatureSelect={setActiveTab} />
             ) : (
               <>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to SafeGuard</h1>
@@ -84,16 +87,7 @@ const Index = () => {
       );
     }
 
-    if (activeTab === 'community' && userRole === 'user') {
-      return (
-        <div className="container mx-auto px-4 py-6">
-          <Community />
-        </div>
-      );
-    }
-
-    // Admin-specific community with posting capabilities
-    if (activeTab === 'community' && userRole === 'admin') {
+    if (activeTab === 'community') {
       return (
         <div className="container mx-auto px-4 py-6">
           <Community />

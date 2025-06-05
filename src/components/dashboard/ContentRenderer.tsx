@@ -15,6 +15,8 @@ import ChatbotSupport from '@/components/ChatbotSupport';
 import SafetyResourceDirectory from '@/components/SafetyResourceDirectory';
 import ActivityHistory from '@/components/ActivityHistory';
 import AlertSystem from '@/components/AlertSystem';
+import ReviewRequests from '@/components/ReviewRequests';
+import DataRequest from '@/components/DataRequest';
 
 interface ContentRendererProps {
   activeTab: string;
@@ -51,6 +53,10 @@ const ContentRenderer = ({ activeTab, userRole }: ContentRendererProps) => {
       return <ActivityHistory />;
     case 'alerts':
       return <AlertSystem />;
+    case 'review-requests':
+      return <ReviewRequests />;
+    case 'request':
+      return <DataRequest />;
     default:
       return (
         <div className="bg-white rounded-xl shadow-lg p-6">

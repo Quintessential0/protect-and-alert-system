@@ -1,72 +1,232 @@
 
-import React, { useState } from 'react';
-import { ClipboardList, Send, AlertCircle, FileText, Users, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileSearch, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
+import { useActivityLogger } from '@/components/ActivityLog';
+
+interface AdminRequest {
+  id: string;
+  admin_id: string;
+  request_type: string;
+  title: string;
+  description: string;
+  status: string;
+  request_data: any;
+  created_at: string;
+  updated_at: string;
+  admin_profile?: {
+    full_name: string;
+  };
+}
+
+interface GovernmentRequest {
+  id: string;
+  government_admin_id: string;
+  request_type: string;
+  title: string;
+  description: string;
+  status: string;
+  request_data: any;
+  created_at: string;
+  target_user_id?: string;
+  target_user_profile?: {
+    full_name: string;
+  };
+}
 
 const ReviewRequests = () => {
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
+  const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
+  const [governmentRequests, setGovernmentRequests] = useState<GovernmentRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'admin_requests' | 'govt_requests'>('admin_requests');
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile } = useProfile(user);
-  
-  const userRole = profile?.role || 'user';
+  const { logActivity } = useActivityLogger();
 
-  // Mock data for government official requests
-  const [pendingRequests] = useState([
-    {
-      id: '1',
-      requestType: 'user_media',
-      requestedBy: 'govt.official@gov.org',
-      caseId: 'CASE-2025-001',
-      userId: 'user123',
-      userName: 'John Doe',
-      description: 'Request audio/video recordings for incident investigation on 2025-06-01',
-      urgency: 'high',
-      requestedAt: '2025-06-02T10:30:00Z',
-      status: 'pending'
-    },
-    {
-      id: '2',
-      requestType: 'emergency_contacts',
-      requestedBy: 'investigator@gov.org',
-      caseId: 'CASE-2025-002',
-      userId: 'user456',
-      userName: 'Jane Smith',
-      description: 'Need emergency contact information for welfare check investigation',
-      urgency: 'medium',
-      requestedAt: '2025-06-02T09:15:00Z',
-      status: 'pending'
+  useEffect(() => {
+    if (user && profile) {
+      fetchRequests();
     }
-  ]);
+  }, [user, profile]);
 
-  const handleProvideData = async (requestId: string, dataType: string) => {
+  const fetchRequests = async () => {
     try {
-      // In a real app, this would compile and send the requested user data
-      console.log(`Providing ${dataType} data for request ${requestId}`);
-      
-      toast({
-        title: "Data Provided",
-        description: "User data has been securely transmitted to the government official.",
-      });
+      if (profile?.role === 'govt_admin') {
+        // Government admins see admin requests
+        const { data: adminReqs, error: adminError } = await supabase
+          .from('admin_requests')
+          .select(`
+            *,
+            profiles!admin_id (
+              full_name
+            )
+          `)
+          .order('created_at', { ascending: false });
 
-    } catch (error) {
-      console.error('Error providing data:', error);
+        if (adminError) throw adminError;
+        
+        const formattedAdminReqs = adminReqs?.map(req => ({
+          ...req,
+          admin_profile: req.profiles as any
+        })) || [];
+
+        setAdminRequests(formattedAdminReqs);
+      }
+
+      if (profile?.role === 'admin') {
+        // Admins see government requests
+        const { data: govReqs, error: govError } = await supabase
+          .from('government_requests')
+          .select(`
+            *,
+            profiles!target_user_id (
+              full_name
+            )
+          `)
+          .order('created_at', { ascending: false });
+
+        if (govError) throw govError;
+        
+        const formattedGovReqs = govReqs?.map(req => ({
+          ...req,
+          target_user_profile: req.profiles as any
+        })) || [];
+
+        setGovernmentRequests(formattedGovReqs);
+      }
+
+    } catch (error: any) {
+      console.error('Error fetching requests:', error);
       toast({
         title: "Error",
-        description: "Failed to provide data. Please try again.",
+        description: "Failed to load requests.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminRequestAction = async (requestId: string, action: 'approve' | 'reject') => {
+    try {
+      const { error } = await supabase
+        .from('admin_requests')
+        .update({
+          status: action === 'approve' ? 'approved' : 'rejected',
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      await logActivity('admin', `Admin request ${action}d`, { 
+        request_id: requestId,
+        action: action 
+      });
+
+      toast({
+        title: "Request Updated",
+        description: `Request has been ${action}d successfully.`,
+      });
+
+      fetchRequests();
+    } catch (error: any) {
+      console.error('Error updating request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update request.",
         variant: "destructive",
       });
     }
   };
 
-  if (userRole !== 'admin') {
+  const handleGovernmentRequestAction = async (requestId: string, action: 'approve' | 'reject') => {
+    try {
+      const { error } = await supabase
+        .from('government_requests')
+        .update({
+          status: action === 'approve' ? 'approved' : 'rejected',
+          handled_by: user?.id,
+          handled_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      await logActivity('admin', `Government request ${action}d`, { 
+        request_id: requestId,
+        action: action 
+      });
+
+      toast({
+        title: "Request Updated",
+        description: `Request has been ${action}d successfully.`,
+      });
+
+      fetchRequests();
+    } catch (error: any) {
+      console.error('Error updating request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update request.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRequestTypeIcon = (type: string) => {
+    switch (type) {
+      case 'zone_modification':
+        return '🗺️';
+      case 'data_access':
+        return '📊';
+      case 'user_data_request':
+        return '👤';
+      default:
+        return '📋';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+          <div className="space-y-3">
+            <div className="h-20 bg-gray-200 rounded"></div>
+            <div className="h-20 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (profile?.role === 'user') {
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <FileSearch className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-gray-700 mb-2">Access Restricted</h3>
-        <p className="text-gray-600">Only administrators can access request reviews.</p>
+        <p className="text-gray-600">Only administrators can review requests.</p>
       </div>
     );
   }
@@ -74,134 +234,174 @@ const ReviewRequests = () => {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Review Data Access Requests</h2>
-        <p className="text-gray-600 mb-6">
-          Review and respond to data access requests from Government Officials for investigative purposes.
-        </p>
-
-        {/* Tab Navigation */}
-        <div className="flex space-x-4 mb-6">
-          <button
-            onClick={() => setActiveTab('pending')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'pending'
-                ? 'bg-orange-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <ClipboardList className="w-4 h-4" />
-            <span>Pending Requests ({pendingRequests.length})</span>
-          </button>
-          
-          <button
-            onClick={() => setActiveTab('completed')}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              activeTab === 'completed'
-                ? 'bg-orange-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <CheckCircle className="w-4 h-4" />
-            <span>Completed (0)</span>
-          </button>
+        <div className="flex items-center space-x-3 mb-6">
+          <FileSearch className="w-6 h-6 text-safe-600" />
+          <h2 className="text-xl font-bold text-gray-900">Review Requests</h2>
         </div>
 
-        {/* Pending Requests */}
-        {activeTab === 'pending' && (
+        {/* Tab Navigation */}
+        {(profile?.role === 'govt_admin' || profile?.role === 'admin') && (
+          <div className="flex space-x-4 mb-6">
+            {profile?.role === 'govt_admin' && (
+              <button
+                onClick={() => setActiveTab('admin_requests')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === 'admin_requests'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Admin Requests ({adminRequests.filter(r => r.status === 'pending').length})
+              </button>
+            )}
+            
+            {profile?.role === 'admin' && (
+              <button
+                onClick={() => setActiveTab('govt_requests')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === 'govt_requests'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Government Requests ({governmentRequests.filter(r => r.status === 'pending').length})
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Admin Requests (for Government Admins) */}
+        {activeTab === 'admin_requests' && profile?.role === 'govt_admin' && (
           <div className="space-y-4">
-            {pendingRequests.map((request) => (
-              <div key={request.id} className="border border-gray-200 rounded-lg p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    {request.requestType === 'user_media' ? (
-                      <FileText className="w-6 h-6 text-blue-600" />
-                    ) : (
-                      <Users className="w-6 h-6 text-green-600" />
-                    )}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        Case: {request.caseId}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Requested by {request.requestedBy} • {new Date(request.requestedAt).toLocaleDateString()}
-                      </p>
+            {adminRequests.map((request) => (
+              <div key={request.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className="text-lg">{getRequestTypeIcon(request.request_type)}</span>
+                      <h3 className="font-semibold text-gray-900">{request.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      request.urgency === 'high' ? 'bg-red-100 text-red-700' :
-                      request.urgency === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {request.urgency} priority
-                    </span>
+                    
+                    <p className="text-gray-600 mb-2">{request.description}</p>
+                    
+                    <div className="text-sm text-gray-500 space-y-1">
+                      <p>Requested by: {request.admin_profile?.full_name || 'Unknown Admin'}</p>
+                      <p>Date: {new Date(request.created_at).toLocaleDateString()}</p>
+                      <p>Type: {request.request_type.replace('_', ' ').toUpperCase()}</p>
+                    </div>
+
+                    {request.request_data && (
+                      <details className="mt-3">
+                        <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800">
+                          View Request Details
+                        </summary>
+                        <pre className="mt-2 p-3 bg-gray-50 rounded text-xs overflow-x-auto">
+                          {JSON.stringify(request.request_data, null, 2)}
+                        </pre>
+                      </details>
+                    )}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Target User</label>
-                    <p className="text-gray-900">{request.userName} (ID: {request.userId})</p>
+                {request.status === 'pending' && (
+                  <div className="flex space-x-2 pt-3 border-t">
+                    <button
+                      onClick={() => handleAdminRequestAction(request.id, 'approve')}
+                      className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Approve</span>
+                    </button>
+                    <button
+                      onClick={() => handleAdminRequestAction(request.id, 'reject')}
+                      className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span>Reject</span>
+                    </button>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Data Type Requested</label>
-                    <p className="text-gray-900 capitalize">{request.requestType.replace('_', ' ')}</p>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700">Investigation Details</label>
-                  <p className="text-gray-900 mt-1">{request.description}</p>
-                </div>
-
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => handleProvideData(request.id, request.requestType)}
-                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>Provide Requested Data</span>
-                  </button>
-                  
-                  <button
-                    className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>Request More Details</span>
-                  </button>
-                </div>
+                )}
               </div>
             ))}
 
-            {pendingRequests.length === 0 && (
+            {adminRequests.length === 0 && (
               <div className="text-center py-8">
-                <ClipboardList className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Pending Requests</h3>
-                <p className="text-gray-600">All data access requests have been processed.</p>
+                <Clock className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">No admin requests to review.</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Completed Requests */}
-        {activeTab === 'completed' && (
-          <div className="text-center py-8">
-            <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Completed Requests</h3>
-            <p className="text-gray-600">Completed requests will appear here.</p>
+        {/* Government Requests (for Admins) */}
+        {activeTab === 'govt_requests' && profile?.role === 'admin' && (
+          <div className="space-y-4">
+            {governmentRequests.map((request) => (
+              <div key={request.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <span className="text-lg">{getRequestTypeIcon(request.request_type)}</span>
+                      <h3 className="font-semibold text-gray-900">{request.title}</h3>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
+                    </div>
+                    
+                    <p className="text-gray-600 mb-2">{request.description}</p>
+                    
+                    <div className="text-sm text-gray-500 space-y-1">
+                      <p>Requested by: Government Administration</p>
+                      <p>Target User: {request.target_user_profile?.full_name || 'System Wide'}</p>
+                      <p>Date: {new Date(request.created_at).toLocaleDateString()}</p>
+                      <p>Type: {request.request_type.replace('_', ' ').toUpperCase()}</p>
+                    </div>
+
+                    {request.request_data && (
+                      <details className="mt-3">
+                        <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800">
+                          View Request Details
+                        </summary>
+                        <pre className="mt-2 p-3 bg-gray-50 rounded text-xs overflow-x-auto">
+                          {JSON.stringify(request.request_data, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                </div>
+
+                {request.status === 'pending' && (
+                  <div className="flex space-x-2 pt-3 border-t">
+                    <button
+                      onClick={() => handleGovernmentRequestAction(request.id, 'approve')}
+                      className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Approve</span>
+                    </button>
+                    <button
+                      onClick={() => handleGovernmentRequestAction(request.id, 'reject')}
+                      className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      <span>Reject</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {governmentRequests.length === 0 && (
+              <div className="text-center py-8">
+                <Eye className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">No government requests to review.</p>
+              </div>
+            )}
           </div>
         )}
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center space-x-2 mb-2">
-          <AlertCircle className="w-5 h-5 text-blue-600" />
-          <h4 className="font-medium text-blue-900">Data Privacy Notice</h4>
-        </div>
-        <p className="text-blue-800 text-sm">
-          All user data transfers are logged and encrypted. Only provide data for legitimate government investigations 
-          with proper case identification. Unauthorized data access is strictly prohibited.
-        </p>
       </div>
     </div>
   );

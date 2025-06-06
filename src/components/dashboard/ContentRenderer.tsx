@@ -14,6 +14,7 @@ import GovernmentRequests from '@/components/GovernmentRequests';
 import ChatbotSupport from '@/components/ChatbotSupport';
 import SafetyResourceDirectory from '@/components/SafetyResourceDirectory';
 import ActivityHistory from '@/components/ActivityHistory';
+import ActivityLog from '@/components/ActivityLog';
 import AlertSystem from '@/components/AlertSystem';
 import ReviewRequests from '@/components/ReviewRequests';
 import DataRequest from '@/components/DataRequest';
@@ -51,6 +52,8 @@ const ContentRenderer = ({ activeTab, userRole }: ContentRendererProps) => {
       return <SafetyResourceDirectory />;
     case 'activity':
       return <ActivityHistory />;
+    case 'activity-log':
+      return <ActivityLog />;
     case 'alerts':
       return <AlertSystem />;
     case 'review-requests':

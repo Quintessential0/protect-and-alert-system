@@ -1,153 +1,107 @@
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { message, conversationHistory } = await req.json();
-    console.log('Received request:', { message, historyLength: conversationHistory?.length });
+    const { message, conversation_id, user_id } = await req.json()
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
-      throw new Error('OpenAI API key not configured');
-    }
+    // Basic chatbot responses - in a real implementation, you'd use OpenAI or another AI service
+    const responses = {
+      // Safety and emergency responses
+      'emergency': [
+        "If you're in immediate danger, please call emergency services (911) right away. Your safety is the top priority.",
+        "For immediate emergencies, contact local emergency services. I can help you with safety planning and resources."
+      ],
+      'help': [
+        "I'm here to help you with safety concerns, emergency planning, and using SafeGuard features. What would you like to know?",
+        "How can I assist you with your safety needs today? I can help with emergency contacts, safety tips, or app features."
+      ],
+      'safety': [
+        "Here are some safety tips: Always let someone know where you're going, trust your instincts, stay aware of your surroundings, and keep emergency contacts updated.",
+        "Safety planning is important. Make sure your emergency contacts are current, consider safe zones in your area, and practice using the SOS feature."
+      ],
+      'contacts': [
+        "You can manage your emergency contacts in the 'Emergency Contacts' section. Make sure to include people who can respond quickly in different situations.",
+        "Emergency contacts should include family, friends, and local authorities. Update their information regularly and let them know they're listed."
+      ],
+      'sos': [
+        "The SOS button sends alerts to your emergency contacts and shares your location. It also starts automatic recording for evidence.",
+        "When you press SOS, wait for the 3-second countdown to complete. This prevents accidental activation while ensuring quick access in emergencies."
+      ],
+      'recording': [
+        "Emergency recordings are automatically started when SOS is activated. They're stored securely and can be accessed by authorities if needed.",
+        "Audio and video recordings during emergencies serve as evidence and help responders understand your situation better."
+      ],
+      'location': [
+        "Location sharing helps emergency contacts and authorities find you quickly. Your location is only shared during emergencies or when you explicitly allow it.",
+        "Keeping location services enabled ensures accurate emergency response. Your privacy is protected with secure, encrypted location data."
+      ]
+    };
 
-    // Create the conversation context with safety-focused system prompt
-    const messages = [
-      {
-        role: 'system',
-        content: `You are a helpful AI assistant for SafeGuard, a personal safety application. Your role is to:
+    // Simple keyword matching for responses
+    let response = "I understand you're reaching out for help. I'm here to assist with safety concerns, emergency planning, and SafeGuard features. Could you please be more specific about what you need help with?";
 
-1. Provide safety advice and tips
-2. Help users understand how to use SafeGuard features
-3. Offer emotional support during difficult situations
-4. Guide users on emergency procedures
-5. Answer questions about personal safety, women's safety, and crisis situations
-
-Guidelines:
-- Always prioritize user safety
-- Be empathetic and supportive
-- Provide practical, actionable advice
-- If someone mentions being in immediate danger, encourage them to contact emergency services (911) immediately
-- Keep responses concise but helpful
-- Stay focused on safety-related topics
-- Be non-judgmental and understanding
-
-Available SafeGuard features you can help explain:
-- Location sharing with emergency contacts
-- Audio/video recording for evidence
-- Incident reporting
-- Emergency contacts management
-- Fake call scheduler for exit strategies
-- Safe zones and danger zone alerts
-- Emotional support resources`
-      },
-      ...(conversationHistory || []),
-      { role: 'user', content: message }
-    ];
-
-    // Retry logic with exponential backoff
-    let response;
-    let attempts = 0;
-    const maxAttempts = 3;
+    const messageLower = message.toLowerCase();
     
-    while (attempts < maxAttempts) {
-      try {
-        console.log(`Attempt ${attempts + 1} to call OpenAI API`);
-        
-        response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAIApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: messages,
-            max_tokens: 500,
-            temperature: 0.7,
-            stream: false,
-          }),
-        });
-
-        if (response.ok) {
-          break; // Success, exit retry loop
-        } else if (response.status === 429) {
-          // Rate limited
-          const retryAfter = response.headers.get('retry-after');
-          const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : Math.pow(2, attempts) * 1000;
-          console.log(`Rate limited, waiting ${waitTime}ms before retry`);
-          await delay(waitTime);
-          attempts++;
-        } else {
-          throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
-        }
-      } catch (error) {
-        attempts++;
-        if (attempts >= maxAttempts) {
-          throw error;
-        }
-        console.log(`Attempt ${attempts} failed, retrying...`);
-        await delay(Math.pow(2, attempts - 1) * 1000);
+    // Check for keywords and provide appropriate responses
+    for (const [key, responseArray] of Object.entries(responses)) {
+      if (messageLower.includes(key)) {
+        response = responseArray[Math.floor(Math.random() * responseArray.length)];
+        break;
       }
     }
 
-    if (!response || !response.ok) {
-      throw new Error(`OpenAI API error after ${maxAttempts} attempts`);
+    // Handle common greetings
+    if (messageLower.match(/^(hi|hello|hey|good morning|good afternoon|good evening)/)) {
+      response = "Hello! I'm your SafeGuard AI assistant. I'm here to help you with safety questions, emergency planning, and using the app's features. How can I assist you today?";
     }
 
-    const data = await response.json();
-    console.log('OpenAI response received successfully');
-    
-    const aiResponse = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't generate a proper response. Please try again.";
+    // Handle thank you messages
+    if (messageLower.includes('thank')) {
+      response = "You're welcome! I'm always here to help with your safety needs. Don't hesitate to reach out if you have more questions about emergency preparedness or using SafeGuard.";
+    }
+
+    // Handle questions about features
+    if (messageLower.includes('how') && messageLower.includes('work')) {
+      response = "SafeGuard works by providing you with emergency tools like SOS alerts, location sharing, emergency contacts, and automatic recording. Each feature is designed to help you stay safe and get help quickly when needed.";
+    }
+
+    console.log(`Chatbot request from user ${user_id}: ${message}`);
+    console.log(`Response: ${response}`);
 
     return new Response(
       JSON.stringify({ 
-        response: aiResponse,
+        response,
+        conversation_id,
+        user_id,
         timestamp: new Date().toISOString()
       }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    );
+    )
 
   } catch (error) {
-    console.error('Error in chatbot-support function:', error);
-    
-    let errorMessage = 'Failed to get AI response';
-    let statusCode = 500;
-    
-    if (error.message?.includes('429') || error.message?.includes('rate')) {
-      errorMessage = 'AI service is temporarily busy due to high usage';
-      statusCode = 429;
-    } else if (error.message?.includes('API key')) {
-      errorMessage = 'AI service configuration error';
-      statusCode = 503;
-    }
-    
+    console.error('Error in chatbot function:', error);
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        details: error.message,
-        retryable: statusCode === 429
+        response: "I apologize, but I'm experiencing technical difficulties right now. Please try again in a moment, or contact support if the issue persists.",
+        error: true
       }),
-      {
-        status: statusCode,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    );
+    )
   }
-});
+})

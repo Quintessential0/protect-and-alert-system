@@ -5,8 +5,22 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+interface Story {
+  id: string;
+  title: string;
+  content: string;
+  story_type: string;
+  is_anonymous: boolean;
+  author_name: string | null;
+  user_id: string | null;
+  status: string;
+  likes_count: number;
+  tags: string[];
+  created_at: string;
+}
+
 const PersonalStories = () => {
-  const [stories, setStories] = useState([]);
+  const [stories, setStories] = useState<Story[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [newStory, setNewStory] = useState({
@@ -15,7 +29,7 @@ const PersonalStories = () => {
     story_type: 'survival',
     is_anonymous: false,
     author_name: '',
-    tags: []
+    tags: [] as string[]
   });
   const { toast } = useToast();
   const { user } = useAuth();

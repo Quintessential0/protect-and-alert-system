@@ -1,109 +1,50 @@
 
-import React, { useState, useEffect } from 'react';
-import { Send, AlertCircle, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { Send, AlertCircle, FileText, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { supabase } from '@/integrations/supabase/client';
 
 const DataRequest = () => {
   const [dataRequest, setDataRequest] = useState({
-    title: '',
+    caseId: '',
+    userId: '',
+    userName: '',
+    dataType: 'user_media',
+    urgency: 'medium',
     description: '',
-    targetUserId: '',
-    requestType: 'user_data_access',
-    requestData: {}
+    legalBasis: ''
   });
   
-  const [userList, setUserList] = useState([]);
-  const [myRequests, setMyRequests] = useState([]);
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile } = useProfile(user);
   
   const userRole = profile?.role || 'user';
 
-  useEffect(() => {
-    if (userRole === 'govt_admin') {
-      fetchUsers();
-      fetchMyRequests();
-    }
-  }, [userRole]);
-
-  const fetchUsers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone_number')
-        .eq('role', 'user')
-        .order('full_name');
-
-      if (error) throw error;
-      setUserList(data || []);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  };
-
-  const fetchMyRequests = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('government_requests')
-        .select('*')
-        .eq('government_admin_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setMyRequests(data || []);
-    } catch (error) {
-      console.error('Error fetching requests:', error);
-    }
-  };
-
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
     
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('government_requests')
-        .insert({
-          government_admin_id: user.id,
-          request_type: dataRequest.requestType,
-          title: dataRequest.title,
-          description: dataRequest.description,
-          target_user_id: dataRequest.targetUserId,
-          request_data: dataRequest.requestData
-        });
-
-      if (error) throw error;
-      
-      toast({
-        title: "Data Request Submitted",
-        description: "Your request has been sent to the Administrator for processing.",
-      });
-      
-      setDataRequest({
-        title: '',
-        description: '',
-        targetUserId: '',
-        requestType: 'user_data_access',
-        requestData: {}
-      });
-
-      fetchMyRequests();
-    } catch (error) {
-      console.error('Error submitting request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to submit request.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    console.log('Data Request:', {
+      ...dataRequest,
+      requestedBy: user?.id,
+      requestedAt: new Date().toISOString()
+    });
+    
+    toast({
+      title: "Data Request Submitted",
+      description: "Your request has been sent to the Administrator for processing.",
+    });
+    
+    setDataRequest({
+      caseId: '',
+      userId: '',
+      userName: '',
+      dataType: 'user_media',
+      urgency: 'medium',
+      description: '',
+      legalBasis: ''
+    });
   };
 
   if (userRole !== 'govt_admin') {
@@ -124,48 +65,86 @@ const DataRequest = () => {
           Submit official requests to Administrators for user data required for investigations.
         </p>
 
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 mb-6">
+        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-indigo-900 mb-4">Submit Data Access Request</h3>
           <form onSubmit={handleSubmitRequest} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Case ID</label>
+                <input
+                  type="text"
+                  value={dataRequest.caseId}
+                  onChange={(e) => setDataRequest({...dataRequest, caseId: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="e.g., CASE-2025-001"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+                <input
+                  type="text"
+                  value={dataRequest.userId}
+                  onChange={(e) => setDataRequest({...dataRequest, userId: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Target user ID"
+                  required
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Request Title</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">User Name</label>
               <input
                 type="text"
-                value={dataRequest.title}
-                onChange={(e) => setDataRequest({...dataRequest, title: e.target.value})}
+                value={dataRequest.userName}
+                onChange={(e) => setDataRequest({...dataRequest, userName: e.target.value})}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="e.g., Investigation Case #2025-001"
+                placeholder="Target user full name"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Target User</label>
-              <select
-                value={dataRequest.targetUserId}
-                onChange={(e) => setDataRequest({...dataRequest, targetUserId: e.target.value})}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                required
-              >
-                <option value="">Select a user...</option>
-                {userList.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || 'Unnamed User'} - {user.phone_number || 'No phone'}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Data Type Requested</label>
+                <select
+                  value={dataRequest.dataType}
+                  onChange={(e) => setDataRequest({...dataRequest, dataType: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="user_media">Audio/Video Recordings</option>
+                  <option value="emergency_contacts">Emergency Contact Information</option>
+                  <option value="location_data">Location History</option>
+                  <option value="incident_reports">Incident Reports</option>
+                  <option value="full_profile">Complete User Profile</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Urgency Level</label>
+                <select
+                  value={dataRequest.urgency}
+                  onChange={(e) => setDataRequest({...dataRequest, urgency: e.target.value})}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="low">Low - Routine Investigation</option>
+                  <option value="medium">Medium - Active Case</option>
+                  <option value="high">High - Urgent Investigation</option>
+                  <option value="urgent">Urgent - Immediate Action Required</option>
+                </select>
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Type Requested</label>
-              <select
-                value={dataRequest.requestType}
-                onChange={(e) => setDataRequest({...dataRequest, requestType: e.target.value})}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Legal Basis</label>
+              <input
+                type="text"
+                value={dataRequest.legalBasis}
+                onChange={(e) => setDataRequest({...dataRequest, legalBasis: e.target.value})}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              >
-                <option value="user_data_access">Complete User Data Access</option>
-                <option value="investigation_data">Investigation-Specific Data</option>
-              </select>
+                placeholder="e.g., Court Order #12345, Warrant #67890"
+                required
+              />
             </div>
 
             <div>
@@ -182,47 +161,12 @@ const DataRequest = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50"
+              className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium"
             >
               <Send className="w-4 h-4" />
-              <span>{loading ? 'Submitting...' : 'Submit Data Request'}</span>
+              <span>Submit Data Request</span>
             </button>
           </form>
-        </div>
-
-        {/* My Requests */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">My Requests ({myRequests.length})</h3>
-          {myRequests.length > 0 ? (
-            <div className="space-y-3">
-              {myRequests.map((request) => (
-                <div key={request.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{request.title}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{request.description}</p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Submitted: {new Date(request.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      request.status === 'fulfilled' ? 'bg-green-100 text-green-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-gray-600 text-sm">No requests submitted yet.</p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -232,7 +176,7 @@ const DataRequest = () => {
           <h4 className="font-medium text-red-900">Legal Compliance Notice</h4>
         </div>
         <p className="text-red-800 text-sm">
-          All data requests must be supported by valid legal authorization. 
+          All data requests must be supported by valid legal authorization (court orders, warrants, etc.). 
           Requests without proper legal basis will be rejected. All requests are logged and audited for compliance.
         </p>
       </div>

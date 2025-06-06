@@ -71,7 +71,7 @@ const ChatbotSupport = () => {
 
     try {
       // Add user message to local state immediately
-      const tempMessage: ChatMessage = {
+      const newTempMessage: ChatMessage = {
         id: `temp_${Date.now()}`,
         message: userMessage,
         response: null,
@@ -79,7 +79,7 @@ const ChatbotSupport = () => {
         conversation_id: conversationId
       };
       
-      setMessages(prev => [...prev, tempMessage]);
+      setMessages(prev => [...prev, newTempMessage]);
 
       // Save message to database
       const { data: savedMessage, error: saveError } = await supabase
@@ -120,7 +120,7 @@ const ChatbotSupport = () => {
 
       // Update local state
       setMessages(prev => prev.map(msg => 
-        msg.id === tempMessage.id 
+        msg.id === newTempMessage.id 
           ? { ...savedMessage, response: botResponse }
           : msg
       ));
@@ -130,7 +130,7 @@ const ChatbotSupport = () => {
       
       // Update the temporary message with an error response
       setMessages(prev => prev.map(msg => 
-        msg.id === tempMessage.id 
+        msg.id === newTempMessage.id 
           ? { ...msg, response: 'I apologize, but I\'m experiencing technical difficulties. Please try again in a moment or contact support for assistance.' }
           : msg
       ));

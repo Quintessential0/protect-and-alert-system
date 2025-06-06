@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback } from 'react';
 import { AlertTriangle, Phone, Mic, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -126,14 +125,13 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
         const recordingData = {
           incident_id: incidentId,
           user_id: user.user.id,
-          recording_type: type,
+          file_type: type,
           file_path: fileName,
           file_size: blob.size,
-          duration_seconds: 300, // 5 minutes
-          is_uploaded: false
+          duration_seconds: 300 // 5 minutes
         };
 
-        await supabase.from('emergency_recordings').insert(recordingData);
+        await supabase.from('recordings').insert(recordingData);
         
         // Store blob locally
         localStorage.setItem(`emergency_recording_${incidentId}`, await blobToBase64(blob));
@@ -147,14 +145,13 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
         const recordingData = {
           incident_id: incidentId,
           user_id: user.user.id,
-          recording_type: type,
+          file_type: type,
           file_path: uploadData.path,
           file_size: blob.size,
-          duration_seconds: 300,
-          is_uploaded: true
+          duration_seconds: 300
         };
 
-        await supabase.from('emergency_recordings').insert(recordingData);
+        await supabase.from('recordings').insert(recordingData);
         
         await logActivity('emergency', 'Emergency recording uploaded successfully', { 
           incident_id: incidentId,

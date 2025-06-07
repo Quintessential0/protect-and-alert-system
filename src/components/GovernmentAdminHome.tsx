@@ -1,83 +1,166 @@
 
 import React from 'react';
-import { MessageCircle, Users, BookOpen, Send } from 'lucide-react';
+import { 
+  Shield, 
+  FileSearch, 
+  BarChart3, 
+  MapPin, 
+  Users, 
+  Activity,
+  MessageSquare,
+  Bell,
+  BookOpen,
+  Database
+} from 'lucide-react';
 
 interface GovernmentAdminHomeProps {
-  onFeatureSelect: (featureId: string) => void;
+  onFeatureSelect: (feature: string) => void;
 }
 
 const GovernmentAdminHome = ({ onFeatureSelect }: GovernmentAdminHomeProps) => {
-  const govAdminFeatures = [
+  const govFeatures = [
+    {
+      id: 'activity-log',
+      title: 'System Monitoring',
+      description: 'Monitor all system activities and user interactions',
+      icon: Activity,
+      color: 'bg-blue-600',
+      category: 'primary'
+    },
+    {
+      id: 'govt-requests',
+      title: 'Data Requests',
+      description: 'Submit and track government data requests',
+      icon: FileSearch,
+      color: 'bg-red-600',
+      category: 'primary'
+    },
+    {
+      id: 'user-info',
+      title: 'User Information',
+      description: 'Access comprehensive user data and profiles',
+      icon: Users,
+      color: 'bg-purple-600',
+      category: 'primary'
+    },
     {
       id: 'chatbot',
-      title: 'Chatbot',
-      description: 'Communication and guidance support',
-      icon: MessageCircle,
-      color: 'bg-blue-500 hover:bg-blue-600'
+      title: 'AI Assistant',
+      description: 'Government-level AI support and assistance',
+      icon: MessageSquare,
+      color: 'bg-green-600',
+      category: 'secondary'
     },
     {
       id: 'community',
-      title: 'Community',
-      description: 'Post official and verified support content',
+      title: 'Community Oversight',
+      description: 'Monitor community activities and content',
       icon: Users,
-      color: 'bg-purple-500 hover:bg-purple-600'
-    },
-    {
-      id: 'resources',
-      title: 'Resources',
-      description: 'View and acknowledge resource edit requests from Admins',
-      icon: BookOpen,
-      color: 'bg-green-500 hover:bg-green-600'
+      color: 'bg-orange-600',
+      category: 'secondary'
     },
     {
       id: 'request',
-      title: 'Request',
-      description: 'Request user data from Admins for investigations',
-      icon: Send,
-      color: 'bg-indigo-500 hover:bg-indigo-600'
+      title: 'Data Analytics',
+      description: 'Generate comprehensive system reports',
+      icon: BarChart3,
+      color: 'bg-indigo-600',
+      category: 'secondary'
+    },
+    {
+      id: 'alerts',
+      title: 'Alert Management',
+      description: 'Manage system-wide alerts and notifications',
+      icon: Bell,
+      color: 'bg-yellow-600',
+      category: 'secondary'
+    },
+    {
+      id: 'resources',
+      title: 'Resource Management',
+      description: 'Manage public safety resources and content',
+      icon: BookOpen,
+      color: 'bg-teal-600',
+      category: 'secondary'
     }
   ];
 
+  const primaryFeatures = govFeatures.filter(f => f.category === 'primary');
+  const secondaryFeatures = govFeatures.filter(f => f.category === 'secondary');
+
   return (
     <div className="space-y-8">
-      <div className="mb-8">
+      <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Government Admin Dashboard</h1>
-        <p className="text-gray-600">Oversee investigations, manage resources, and review administrative requests</p>
+        <p className="text-gray-600">Comprehensive oversight and data management tools</p>
       </div>
 
-      {/* Government Admin Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {govAdminFeatures.map((feature) => {
-          const Icon = feature.icon;
-          return (
-            <button
-              key={feature.id}
-              onClick={() => onFeatureSelect(feature.id)}
-              className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all transform hover:scale-105 text-left"
-            >
-              <div className={`w-16 h-16 ${feature.color} rounded-lg flex items-center justify-center mb-6 transition-colors`}>
-                <Icon className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
-            </button>
-          );
-        })}
+      {/* Primary Government Features */}
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Core Government Operations</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {primaryFeatures.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => onFeatureSelect(feature.id)}
+                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-left"
+              >
+                <div className={`w-12 h-12 ${feature.color} rounded-lg flex items-center justify-center mb-4`}>
+                  <Icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-gray-600 text-sm">{feature.description}</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Quick Stats or Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-          <h4 className="font-medium text-indigo-900 mb-1">Active Investigations</h4>
-          <p className="text-indigo-700 text-sm">Ongoing data requests and reviews</p>
+      {/* Secondary Government Features */}
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Additional Tools</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {secondaryFeatures.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => onFeatureSelect(feature.id)}
+                className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition-all duration-200 transform hover:scale-105 text-left"
+              >
+                <div className={`w-10 h-10 ${feature.color} rounded-lg flex items-center justify-center mb-3`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-md font-semibold text-gray-900 mb-1">{feature.title}</h3>
+                <p className="text-gray-600 text-xs">{feature.description}</p>
+              </button>
+            );
+          })}
         </div>
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h4 className="font-medium text-green-900 mb-1">Zone Requests</h4>
-          <p className="text-green-700 text-sm">Admin submissions for safe zone updates</p>
-        </div>
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <h4 className="font-medium text-purple-900 mb-1">Resource Approvals</h4>
-          <p className="text-purple-700 text-sm">Review and acknowledge resource changes</p>
+      </div>
+
+      {/* Government Statistics */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Government Oversight Statistics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">1,247</div>
+            <div className="text-sm text-gray-600">Total Users</div>
+          </div>
+          <div className="text-center p-4 bg-red-50 rounded-lg">
+            <div className="text-2xl font-bold text-red-600">23</div>
+            <div className="text-sm text-gray-600">Active Incidents</div>
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">156</div>
+            <div className="text-sm text-gray-600">Safe Zones</div>
+          </div>
+          <div className="text-center p-4 bg-purple-50 rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">12</div>
+            <div className="text-sm text-gray-600">Pending Requests</div>
+          </div>
         </div>
       </div>
     </div>

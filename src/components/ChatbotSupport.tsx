@@ -69,18 +69,18 @@ const ChatbotSupport = () => {
     setCurrentMessage('');
     setIsLoading(true);
 
-    try {
-      // Add user message to local state immediately
-      const newTempMessage: ChatMessage = {
-        id: `temp_${Date.now()}`,
-        message: userMessage,
-        response: null,
-        created_at: new Date().toISOString(),
-        conversation_id: conversationId
-      };
-      
-      setMessages(prev => [...prev, newTempMessage]);
+    // Add user message to local state immediately
+    const newTempMessage: ChatMessage = {
+      id: `temp_${Date.now()}`,
+      message: userMessage,
+      response: null,
+      created_at: new Date().toISOString(),
+      conversation_id: conversationId
+    };
+    
+    setMessages(prev => [...prev, newTempMessage]);
 
+    try {
       // Save message to database
       const { data: savedMessage, error: saveError } = await supabase
         .from('chat_messages')

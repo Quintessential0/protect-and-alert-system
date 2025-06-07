@@ -5,24 +5,18 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Home, 
-  Users, 
-  MapPin, 
-  Video, 
-  Phone, 
-  Shield, 
+  FileText, 
   MessageSquare, 
-  Settings,
-  FileSearch,
-  BookOpen,
-  Activity,
-  Bell,
-  BarChart3,
+  Users,
   UserCheck,
-  Building2,
+  FileSearch,
+  Shield,
   Menu,
   X,
   LogOut,
-  User
+  User,
+  Settings,
+  Activity
 } from 'lucide-react';
 
 interface TopNavigationProps {
@@ -44,28 +38,33 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
   };
 
   const getNavigationItems = () => {
-    const baseItems = [
-      { id: 'home', label: 'Home', icon: Home, roles: ['user', 'admin', 'govt_admin'] },
-      { id: 'sos', label: 'SOS', icon: Shield, roles: ['user'] },
-      { id: 'contacts', label: 'Contacts', icon: Users, roles: ['user'] },
-      { id: 'location', label: 'Location', icon: MapPin, roles: ['user'] },
-      { id: 'recording', label: 'Recording', icon: Video, roles: ['user'] },
-      { id: 'fakecall', label: 'Fake Call', icon: Phone, roles: ['user'] },
-      { id: 'safezones', label: 'Safe Zones', icon: Shield, roles: ['user', 'admin', 'govt_admin'] },
-      { id: 'chatbot', label: 'AI Assistant', icon: MessageSquare, roles: ['user', 'admin', 'govt_admin'] },
-      { id: 'community', label: 'Community', icon: Users, roles: ['user', 'admin', 'govt_admin'] },
-      { id: 'resources', label: 'Resources', icon: BookOpen, roles: ['user', 'admin', 'govt_admin'] },
-      { id: 'alerts', label: 'Alerts', icon: Bell, roles: ['user', 'admin', 'govt_admin'] },
-      { id: 'activity-log', label: 'Activity Log', icon: Activity, roles: ['admin', 'govt_admin'] },
-      { id: 'user-info', label: 'User Info', icon: UserCheck, roles: ['admin', 'govt_admin'] },
-      { id: 'admin-requests', label: 'Admin Requests', icon: FileSearch, roles: ['admin'] },
-      { id: 'govt-requests', label: 'Govt Requests', icon: Building2, roles: ['govt_admin'] },
-      { id: 'review-requests', label: 'Review Requests', icon: FileSearch, roles: ['admin', 'govt_admin'] },
-      { id: 'request', label: 'Data Request', icon: BarChart3, roles: ['admin', 'govt_admin'] },
-      { id: 'settings', label: 'Settings', icon: Settings, roles: ['user', 'admin', 'govt_admin'] },
-    ];
-
-    return baseItems.filter(item => item.roles.includes(userRole));
+    switch (userRole) {
+      case 'user':
+        return [
+          { id: 'home', label: 'Home', icon: Home },
+          { id: 'incident-report', label: 'Report', icon: FileText },
+          { id: 'chatbot', label: 'Chatbot', icon: MessageSquare },
+          { id: 'community', label: 'Community', icon: Users }
+        ];
+      case 'admin':
+        return [
+          { id: 'home', label: 'Home', icon: Home },
+          { id: 'incident-report', label: 'Report', icon: FileText },
+          { id: 'user-info', label: 'User Info', icon: UserCheck },
+          { id: 'admin-requests', label: 'Requests', icon: FileSearch }
+        ];
+      case 'govt_admin':
+        return [
+          { id: 'home', label: 'Home', icon: Home },
+          { id: 'incident-report', label: 'Report', icon: FileText },
+          { id: 'review-requests', label: 'Review Requests', icon: FileSearch },
+          { id: 'safezones', label: 'Manage Zones', icon: Shield }
+        ];
+      default:
+        return [
+          { id: 'home', label: 'Home', icon: Home }
+        ];
+    }
   };
 
   const navigationItems = getNavigationItems();
@@ -82,7 +81,7 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
-            {navigationItems.slice(0, 6).map((item) => {
+            {navigationItems.map((item) => {
               const Icon = item.icon;
               return (
                 <button
@@ -101,7 +100,7 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
             })}
           </div>
 
-          {/* Profile Section - Fixed for mobile */}
+          {/* Profile Section */}
           <div className="flex items-center space-x-4">
             {/* Mobile menu button */}
             <button
@@ -111,7 +110,7 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
 
-            {/* Profile menu - single icon on mobile */}
+            {/* Profile menu */}
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -146,6 +145,16 @@ const TopNavigation = ({ activeTab, onTabChange }: TopNavigationProps) => {
                     >
                       <Settings className="w-4 h-4" />
                       <span>Settings</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onTabChange('activity-log');
+                        setShowProfileMenu(false);
+                      }}
+                      className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+                    >
+                      <Activity className="w-4 h-4" />
+                      <span>Activity Log</span>
                     </button>
                     <button
                       onClick={handleSignOut}

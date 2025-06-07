@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Bot } from 'lucide-react';
-import ChatMessage from './ChatMessage';
+import ChatMessageComponent from './ChatMessage';
 
 interface ChatMessage {
   id: string;
@@ -36,7 +36,7 @@ const ChatMessagesList = ({ messages }: ChatMessagesListProps) => {
       )}
       
       {messages.map((msg) => (
-        <ChatMessage key={msg.id} message={msg} />
+        <ChatMessageComponent key={msg.id} message={msg} />
       ))}
       <div ref={messagesEndRef} />
     </div>

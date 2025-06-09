@@ -27,11 +27,13 @@ export const useEmergencyRecording = () => {
 
       const fileName = `${user.user.id}/${incidentId}_${Date.now()}.webm`;
       
+      // Try to upload to Supabase storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('emergency-recordings')
         .upload(fileName, blob);
 
       if (uploadError) {
+        // If upload fails (offline), store locally
         const recordingData = {
           incident_id: incidentId,
           user_id: user.user.id,
@@ -41,14 +43,28 @@ export const useEmergencyRecording = () => {
           duration_seconds: 300
         };
 
+        // Store recording metadata and try to insert when online
         await supabase.from('recordings').insert(recordingData);
-        localStorage.setItem(`emergency_recording_${incidentId}`, await blobToBase64(blob));
         
+        // Store blob locally for later upload
+        localStorage.setItem(`emergency_recording_${incidentId}`, await blobToBase64(blob));
+        localStorage.setItem(`emergency_recording_meta_${incidentId}`, JSON.stringify(recordingData));
+        
+        await logActivity('emergency', 'Emergency recording stored offline', { 
+          incident_id: incidentId,
+          file_path: fileName,
+          stored_locally: true
+        });
+
         toast({
           title: "Recording Saved Offline",
           description: "Recording saved locally. Will upload when connection is restored.",
         });
+        
+        // Set up retry mechanism
+        setupRetryUpload(incidentId, blob, fileName, recordingData);
       } else {
+        // Upload successful
         const recordingData = {
           incident_id: incidentId,
           user_id: user.user.id,
@@ -73,11 +89,66 @@ export const useEmergencyRecording = () => {
       }
     } catch (error: any) {
       console.error('Error handling recording:', error);
+      
+      // Fallback: store everything locally
+      try {
+        const recordingData = {
+          incident_id: incidentId,
+          file_type: type,
+          file_size: blob.size,
+          timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem(`emergency_recording_${incidentId}`, await blobToBase64(blob));
+        localStorage.setItem(`emergency_recording_meta_${incidentId}`, JSON.stringify(recordingData));
+        
+        toast({
+          title: "Recording Saved Locally",
+          description: "Recording stored on device due to connection issues.",
+        });
+      } catch (localError) {
+        console.error('Failed to store recording locally:', localError);
+      }
     }
+  };
+
+  const setupRetryUpload = (incidentId: string, blob: Blob, fileName: string, recordingData: any) => {
+    const retryInterval = setInterval(async () => {
+      try {
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('emergency-recordings')
+          .upload(fileName, blob);
+
+        if (!uploadError) {
+          // Upload successful, clean up local storage
+          localStorage.removeItem(`emergency_recording_${incidentId}`);
+          localStorage.removeItem(`emergency_recording_meta_${incidentId}`);
+          clearInterval(retryInterval);
+          
+          await logActivity('emergency', 'Offline recording uploaded successfully', { 
+            incident_id: incidentId,
+            file_path: uploadData.path 
+          });
+
+          toast({
+            title: "Recording Uploaded",
+            description: "Offline recording has been successfully uploaded.",
+          });
+        }
+      } catch (retryError) {
+        console.log('Retry upload failed, will try again...');
+      }
+    }, 30000); // Retry every 30 seconds
+
+    // Stop retrying after 1 hour
+    setTimeout(() => {
+      clearInterval(retryInterval);
+    }, 3600000);
   };
 
   const startEmergencyRecording = useCallback(async (incidentId: string) => {
     try {
+      // Try video first, fall back to audio
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: true, 
         video: true 
@@ -102,6 +173,7 @@ export const useEmergencyRecording = () => {
       mediaRecorder.start();
       setIsRecording(true);
 
+      // Record for 5 minutes
       setTimeout(() => {
         if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
           mediaRecorderRef.current.stop();
@@ -109,15 +181,16 @@ export const useEmergencyRecording = () => {
         }
       }, 5 * 60 * 1000);
 
-      await logActivity('emergency', 'Emergency recording started', { 
+      await logActivity('emergency', 'Emergency video recording started', { 
         incident_id: incidentId,
         recording_type: 'video',
         duration_planned: 300 
       });
 
     } catch (error: any) {
-      console.error('Error starting emergency recording:', error);
+      console.error('Error starting video recording:', error);
       
+      // Fallback to audio only
       try {
         const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         const audioRecorder = new MediaRecorder(audioStream);
@@ -139,6 +212,7 @@ export const useEmergencyRecording = () => {
         audioRecorder.start();
         setIsRecording(true);
 
+        // Record for 5 minutes
         setTimeout(() => {
           if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
             mediaRecorderRef.current.stop();

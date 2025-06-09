@@ -21,8 +21,8 @@ const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
 
   const roles = [
     { value: 'user', label: 'User', icon: User, description: 'Regular safety app user' },
-    { value: 'admin', label: 'Admin', icon: UserCheck, description: 'Safety administrator' },
-    { value: 'govt_admin', label: 'Government Admin', icon: Crown, description: 'Government official' }
+    { value: 'admin', label: 'Admin', icon: UserCheck, description: 'Safety administrator (requires approval)' },
+    { value: 'govt_admin', label: 'Government Admin', icon: Crown, description: 'Government official (requires approval)' }
   ];
 
   const handleAuth = async (e: React.FormEvent) => {
@@ -44,54 +44,96 @@ const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
         });
         onAuthSuccess();
       } else {
-        // Sign up the user first
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              phone_number: phoneNumber,
+        // Check if admin/govt_admin signup needs approval
+        if (selectedRole !== 'user') {
+          // For admin/govt_admin, create approval request
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+                phone_number: phoneNumber,
+                requested_role: selectedRole,
+              }
             }
-          }
-        });
-        
-        if (error) throw error;
-        
-        // If user is created, update their profile with the selected role
-        if (data.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ 
-              role: selectedRole,
-              full_name: fullName,
-              phone_number: phoneNumber 
-            })
-            .eq('id', data.user.id);
+          });
+          
+          if (error) throw error;
+          
+          if (data.user) {
+            // Create approval request
+            const { error: approvalError } = await supabase
+              .from('admin_approvals')
+              .insert({
+                user_id: data.user.id,
+                requested_role: selectedRole,
+                requested_by_email: email,
+              });
 
-          if (profileError) {
-            console.error('Error updating profile:', profileError);
-            // Create profile if it doesn't exist
-            const { error: insertError } = await supabase
+            if (approvalError) {
+              console.error('Error creating approval request:', approvalError);
+            }
+
+            // Create profile with pending status
+            const { error: profileError } = await supabase
               .from('profiles')
               .insert({
                 id: data.user.id,
                 full_name: fullName,
                 phone_number: phoneNumber,
-                role: selectedRole,
+                role: 'user', // Set as user until approved
               });
             
-            if (insertError) {
-              console.error('Error creating profile:', insertError);
+            if (profileError) {
+              console.error('Error creating profile:', profileError);
             }
           }
+          
+          toast({
+            title: "Account created - Pending Approval",
+            description: `Your ${selectedRole} account has been created and is pending admin approval.`,
+          });
+          
+          // Sign out the user since they need approval
+          await supabase.auth.signOut();
+          return;
+        } else {
+          // Regular user signup
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: fullName,
+                phone_number: phoneNumber,
+              }
+            }
+          });
+          
+          if (error) throw error;
+          
+          if (data.user) {
+            const { error: profileError } = await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                full_name: fullName,
+                phone_number: phoneNumber,
+                role: 'user',
+              });
+            
+            if (profileError) {
+              console.error('Error creating profile:', profileError);
+            }
+          }
+          
+          toast({
+            title: "Account created!",
+            description: "Your SafeGuard account has been created successfully.",
+          });
+          onAuthSuccess();
         }
-        
-        toast({
-          title: "Account created!",
-          description: `Your SafeGuard ${selectedRole} account has been created successfully.`,
-        });
-        onAuthSuccess();
       }
     } catch (error: any) {
       toast({

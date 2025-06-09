@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileSearch, CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -6,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivityLogger } from '@/components/ActivityLog';
+import AdminApprovals from '@/components/AdminApprovals';
 
 interface AdminRequest {
   id: string;
@@ -41,7 +41,7 @@ const ReviewRequests = () => {
   const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
   const [governmentRequests, setGovernmentRequests] = useState<GovernmentRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'admin_requests' | 'govt_requests'>('admin_requests');
+  const [activeTab, setActiveTab] = useState<'admin_approvals' | 'admin_requests' | 'govt_requests'>('admin_approvals');
   const { toast } = useToast();
   const { user } = useAuth();
   const { profile } = useProfile(user);
@@ -240,34 +240,35 @@ const ReviewRequests = () => {
         </div>
 
         {/* Tab Navigation */}
-        {(profile?.role === 'govt_admin' || profile?.role === 'admin') && (
+        {profile?.role === 'admin' && (
           <div className="flex space-x-4 mb-6">
-            {profile?.role === 'govt_admin' && (
-              <button
-                onClick={() => setActiveTab('admin_requests')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === 'admin_requests'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Admin Requests ({adminRequests.filter(r => r.status === 'pending').length})
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab('admin_approvals')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'admin_approvals'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Admin Approvals
+            </button>
             
-            {profile?.role === 'admin' && (
-              <button
-                onClick={() => setActiveTab('govt_requests')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === 'govt_requests'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Government Requests ({governmentRequests.filter(r => r.status === 'pending').length})
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab('govt_requests')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'govt_requests'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              Government Requests ({governmentRequests.filter(r => r.status === 'pending').length})
+            </button>
           </div>
+        )}
+
+        {/* Content based on active tab */}
+        {activeTab === 'admin_approvals' && profile?.role === 'admin' && (
+          <AdminApprovals />
         )}
 
         {/* Admin Requests (for Government Admins) */}

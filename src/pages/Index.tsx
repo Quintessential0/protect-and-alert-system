@@ -2,13 +2,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import AuthForm from '@/components/auth/AuthForm';
+import AuthForm from '@/components/AuthForm';
 import TopNavigation from '@/components/TopNavigation';
 import LandingPage from '@/components/LandingPage';
-import UserDashboard from '@/components/dashboard/UserDashboard';
-import AdminDashboard from '@/components/dashboard/AdminDashboard';
-import GovtAdminDashboard from '@/components/dashboard/GovtAdminDashboard';
+import CoreFeatures from '@/components/CoreFeatures';
+import AdminHome from '@/components/AdminHome';
+import GovernmentAdminHome from '@/components/GovernmentAdminHome';
+import Community from '@/components/Community';
 import ContentRenderer from '@/components/dashboard/ContentRenderer';
+import EmergencyButton from '@/components/EmergencyButton';
 import ScreamDetection from '@/components/ScreamDetection';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,6 +40,7 @@ const Index = () => {
     );
   }
 
+  // Show landing page for non-authenticated users
   if (!user && !showAuth) {
     return (
       <LandingPage 
@@ -46,6 +49,7 @@ const Index = () => {
     );
   }
 
+  // Show auth form when requested
   if (!user && showAuth) {
     return <AuthForm onAuthSuccess={() => window.location.reload()} />;
   }
@@ -54,13 +58,41 @@ const Index = () => {
 
   const renderContent = () => {
     if (activeTab === 'home') {
-      if (userRole === 'admin') {
-        return <AdminDashboard onFeatureSelect={setActiveTab} />;
-      } else if (userRole === 'govt_admin') {
-        return <GovtAdminDashboard onFeatureSelect={setActiveTab} />;
-      } else {
-        return <UserDashboard onEmergencyTrigger={handleEmergencyTrigger} />;
-      }
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <div className="mb-8">
+            {userRole === 'admin' ? (
+              <AdminHome onFeatureSelect={setActiveTab} />
+            ) : userRole === 'govt_admin' ? (
+              <GovernmentAdminHome onFeatureSelect={setActiveTab} />
+            ) : (
+              <>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to SafeGuard</h1>
+                <p className="text-gray-600 mb-8">Your personal safety dashboard</p>
+                <CoreFeatures onFeatureSelect={setActiveTab} />
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === 'sos' && userRole === 'user') {
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-center">
+            <EmergencyButton onEmergencyTrigger={handleEmergencyTrigger} />
+          </div>
+        </div>
+      );
+    }
+
+    if (activeTab === 'community') {
+      return (
+        <div className="container mx-auto px-4 py-6">
+          <Community />
+        </div>
+      );
     }
 
     return (
@@ -77,6 +109,7 @@ const Index = () => {
         {renderContent()}
       </main>
       
+      {/* Background scream detection after SOS - only for users */}
       {userRole === 'user' && (
         <ScreamDetection 
           isActive={isSOSActive} 

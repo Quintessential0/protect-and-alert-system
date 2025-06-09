@@ -1,70 +1,34 @@
 
 import React from 'react';
-import { MessageSquare, Users, BookOpen, UserCheck } from 'lucide-react';
 
 interface AdminDashboardProps {
-  onFeatureSelect: (feature: string) => void;
+  userRole: string;
 }
 
-const AdminDashboard = ({ onFeatureSelect }: AdminDashboardProps) => {
-  const adminFeatures = [
-    {
-      id: 'chatbot',
-      title: 'AI Assistant',
-      description: 'Access administrative chatbot support',
-      icon: MessageSquare,
-      color: 'bg-blue-500'
-    },
-    {
-      id: 'community',
-      title: 'Community Management',
-      description: 'Moderate community content and manage institutions',
-      icon: Users,
-      color: 'bg-purple-500'
-    },
-    {
-      id: 'resources',
-      title: 'Resource Management',
-      description: 'Edit and manage safety resources',
-      icon: BookOpen,
-      color: 'bg-green-500'
-    },
-    {
-      id: 'review-requests',
-      title: 'Review Requests',
-      description: 'Handle government requests and approve admin signups',
-      icon: UserCheck,
-      color: 'bg-orange-500'
-    }
-  ];
-
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage users, content, and system operations</p>
+const AdminDashboard = ({ userRole }: AdminDashboardProps) => {
+  if (userRole === 'admin') {
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+        <h2 className="text-xl font-bold text-blue-900 mb-2">Admin Dashboard</h2>
+        <p className="text-blue-700">
+          Manage user data, review requests, and oversee safety operations.
+        </p>
       </div>
+    );
+  }
 
-      <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {adminFeatures.map((feature) => {
-          const Icon = feature.icon;
-          return (
-            <button
-              key={feature.id}
-              onClick={() => onFeatureSelect(feature.id)}
-              className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-200 transform hover:scale-105 text-center"
-            >
-              <div className={`w-16 h-16 ${feature.color} rounded-lg flex items-center justify-center mx-auto mb-6`}>
-                <Icon className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
-            </button>
-          );
-        })}
+  if (userRole === 'govt_admin') {
+    return (
+      <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-8">
+        <h2 className="text-xl font-bold text-purple-900 mb-2">Government Admin Dashboard</h2>
+        <p className="text-purple-700">
+          Review government requests, manage safe zones, and oversee incident reports.
+        </p>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
 export default AdminDashboard;

@@ -12,14 +12,6 @@ export const useEmergencyAlerts = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
 
-      // Get user profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, phone_number')
-        .eq('id', user.user.id)
-        .single();
-
-      // Get emergency contacts
       const { data: contacts, error: contactsError } = await supabase
         .from('emergency_contacts')
         .select('*')
@@ -28,73 +20,23 @@ export const useEmergencyAlerts = () => {
 
       if (contactsError) throw contactsError;
 
-      // Prepare emergency message
-      const locationText = location 
-        ? `Location: https://maps.google.com/maps?q=${location.coords.latitude},${location.coords.longitude}`
-        : 'Location: Unable to determine current location';
-
-      const emergencyMessage = `
-🚨 EMERGENCY ALERT 🚨
-${profile?.full_name || 'SafeGuard User'} has triggered an emergency alert.
-${locationText}
-Time: ${new Date().toLocaleString()}
-Please check on them immediately or contact emergency services.
-      `;
-
-      // Send alerts to emergency contacts via edge function
       for (const contact of contacts || []) {
-        try {
-          await supabase.functions.invoke('send-emergency-alert', {
-            body: {
-              contactName: contact.name,
-              contactPhone: contact.phone,
-              contactEmail: contact.email,
-              message: emergencyMessage,
-              incidentId: incidentId
-            }
-          });
-
-          await logActivity('emergency', `Emergency alert sent to ${contact.name}`, { 
-            contact_id: contact.id,
-            incident_id: incidentId,
-            contact_phone: contact.phone,
-            location: location ? {
-              lat: location.coords.latitude,
-              lng: location.coords.longitude
-            } : null
-          });
-        } catch (error) {
-          console.error(`Failed to send alert to ${contact.name}:`, error);
-        }
-      }
-
-      // Notify emergency services via edge function
-      try {
-        await supabase.functions.invoke('notify-emergency-services', {
-          body: {
-            userId: user.user.id,
-            userProfile: profile,
-            location: location ? {
-              latitude: location.coords.latitude,
-              longitude: location.coords.longitude,
-              accuracy: location.coords.accuracy
-            } : null,
-            incidentId: incidentId,
-            timestamp: new Date().toISOString()
-          }
-        });
-
-        await logActivity('emergency', 'Emergency services notified', { 
+        console.log(`Sending emergency alert to ${contact.name} at ${contact.phone}`);
+        
+        await logActivity('emergency', `Emergency alert sent to ${contact.name}`, { 
+          contact_id: contact.id,
           incident_id: incidentId,
-          services_notified: true
+          contact_phone: contact.phone,
+          location: location ? {
+            lat: location.coords.latitude,
+            lng: location.coords.longitude
+          } : null
         });
-      } catch (error) {
-        console.error('Failed to notify emergency services:', error);
       }
 
       toast({
         title: "Emergency Contacts Notified",
-        description: `Alerts sent to ${contacts?.length || 0} emergency contacts and emergency services.`,
+        description: `Alerts sent to ${contacts?.length || 0} emergency contacts.`,
         variant: "destructive",
       });
 

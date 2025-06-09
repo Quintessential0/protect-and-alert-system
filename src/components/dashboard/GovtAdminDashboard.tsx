@@ -1,52 +1,52 @@
 
 import React from 'react';
-import { MessageSquare, Users, BookOpen, UserCheck } from 'lucide-react';
+import { MessageSquare, Users, BookOpen, FileSearch } from 'lucide-react';
 
-interface AdminDashboardProps {
+interface GovtAdminDashboardProps {
   onFeatureSelect: (feature: string) => void;
 }
 
-const AdminDashboard = ({ onFeatureSelect }: AdminDashboardProps) => {
-  const adminFeatures = [
+const GovtAdminDashboard = ({ onFeatureSelect }: GovtAdminDashboardProps) => {
+  const govFeatures = [
     {
       id: 'chatbot',
       title: 'AI Assistant',
-      description: 'Access administrative chatbot support',
+      description: 'Government-level AI support and assistance',
       icon: MessageSquare,
-      color: 'bg-blue-500'
+      color: 'bg-blue-600'
     },
     {
       id: 'community',
-      title: 'Community Management',
-      description: 'Moderate community content and manage institutions',
+      title: 'Community Oversight',
+      description: 'Monitor community activities and content',
       icon: Users,
-      color: 'bg-purple-500'
+      color: 'bg-purple-600'
     },
     {
       id: 'resources',
       title: 'Resource Management',
-      description: 'Edit and manage safety resources',
+      description: 'Manage public safety resources and information',
       icon: BookOpen,
-      color: 'bg-green-500'
+      color: 'bg-green-600'
     },
     {
-      id: 'review-requests',
-      title: 'Review Requests',
-      description: 'Handle government requests and approve admin signups',
-      icon: UserCheck,
-      color: 'bg-orange-500'
+      id: 'govt-requests',
+      title: 'Data Requests',
+      description: 'Request user information for investigations',
+      icon: FileSearch,
+      color: 'bg-red-600'
     }
   ];
 
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-        <p className="text-gray-600">Manage users, content, and system operations</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Government Admin Dashboard</h1>
+        <p className="text-gray-600">Comprehensive oversight and data management tools</p>
       </div>
 
       <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
-        {adminFeatures.map((feature) => {
+        {govFeatures.map((feature) => {
           const Icon = feature.icon;
           return (
             <button
@@ -67,4 +67,4 @@ const AdminDashboard = ({ onFeatureSelect }: AdminDashboardProps) => {
   );
 };
 
-export default AdminDashboard;
+export default GovtAdminDashboard;

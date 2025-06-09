@@ -19,14 +19,24 @@ const EmergencyPlanSettings = () => {
   });
 
   useEffect(() => {
-    if (profile?.emergency_plan_data) {
-      setEmergencyPlan({
-        meeting_points: profile.emergency_plan_data.meeting_points || [''],
-        important_documents: profile.emergency_plan_data.important_documents || [''],
-        emergency_kit_location: profile.emergency_plan_data.emergency_kit_location || '',
-        special_instructions: profile.emergency_plan_data.special_instructions || '',
-        medical_information: profile.emergency_plan_data.medical_information || ''
-      });
+    // Use existing emergency_plan field or default values
+    if (profile?.emergency_plan) {
+      try {
+        const parsedPlan = typeof profile.emergency_plan === 'string' 
+          ? JSON.parse(profile.emergency_plan) 
+          : profile.emergency_plan;
+        
+        setEmergencyPlan({
+          meeting_points: parsedPlan.meeting_points || [''],
+          important_documents: parsedPlan.important_documents || [''],
+          emergency_kit_location: parsedPlan.emergency_kit_location || '',
+          special_instructions: parsedPlan.special_instructions || '',
+          medical_information: parsedPlan.medical_information || ''
+        });
+      } catch (error) {
+        console.error('Error parsing emergency plan:', error);
+        // Use default values if parsing fails
+      }
     }
   }, [profile]);
 
@@ -36,7 +46,7 @@ const EmergencyPlanSettings = () => {
 
     try {
       const success = await updateProfile({
-        emergency_plan_data: emergencyPlan
+        emergency_plan: JSON.stringify(emergencyPlan)
       });
 
       if (success) {

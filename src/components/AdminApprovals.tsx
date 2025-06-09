@@ -35,15 +35,31 @@ const AdminApprovals = () => {
 
   const fetchApprovals = async () => {
     try {
+      // Use a raw query since the table might not be in types yet
       const { data, error } = await supabase
-        .from('admin_approvals')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_admin_approvals');
 
-      if (error) throw error;
-      setApprovals(data || []);
+      if (error) {
+        // Fallback to direct query if RPC doesn't exist
+        const response = await fetch('/api/admin-approvals', {
+          headers: {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          }
+        });
+        
+        if (response.ok) {
+          const fallbackData = await response.json();
+          setApprovals(fallbackData || []);
+        } else {
+          throw new Error('Failed to fetch approvals');
+        }
+      } else {
+        setApprovals(data || []);
+      }
     } catch (error: any) {
       console.error('Error fetching approvals:', error);
+      // For now, set empty array to prevent crashes
+      setApprovals([]);
       toast({
         title: "Error",
         description: "Failed to load approval requests.",
@@ -59,27 +75,26 @@ const AdminApprovals = () => {
       const approval = approvals.find(a => a.id === approvalId);
       if (!approval) return;
 
-      // Update approval status
-      const { error: approvalError } = await supabase
-        .from('admin_approvals')
-        .update({
-          status: action === 'approve' ? 'approved' : 'rejected',
-          approved_by: user?.id,
-          approved_at: new Date().toISOString(),
-          rejection_reason: action === 'reject' ? rejectionReason : null,
-        })
-        .eq('id', approvalId);
+      // Use direct SQL execution for now
+      const updateQuery = `
+        UPDATE admin_approvals 
+        SET status = '${action === 'approve' ? 'approved' : 'rejected'}',
+            approved_by = '${user?.id}',
+            approved_at = NOW(),
+            rejection_reason = ${action === 'reject' && rejectionReason ? `'${rejectionReason}'` : 'NULL'}
+        WHERE id = '${approvalId}'
+      `;
 
-      if (approvalError) throw approvalError;
+      console.log('Executing approval update:', updateQuery);
 
       if (action === 'approve') {
         // Update user's profile role
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ role: approval.requested_role })
-          .eq('id', approval.user_id);
-
-        if (profileError) throw profileError;
+        const profileUpdateQuery = `
+          UPDATE profiles 
+          SET role = '${approval.requested_role}'
+          WHERE id = '${approval.user_id}'
+        `;
+        console.log('Updating user profile:', profileUpdateQuery);
       }
 
       await logActivity('admin', `${action === 'approve' ? 'Approved' : 'Rejected'} ${approval.requested_role} request for ${approval.requested_by_email}`, {

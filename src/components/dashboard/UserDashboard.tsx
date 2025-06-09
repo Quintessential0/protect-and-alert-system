@@ -45,6 +45,11 @@ const UserDashboard = () => {
     }
   };
 
+  const handleFeatureClick = (feature: string) => {
+    console.log('Feature clicked:', feature);
+    // Handle feature navigation here
+  };
+
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Centered SOS Button */}
@@ -53,7 +58,7 @@ const UserDashboard = () => {
       </div>
 
       {/* Feature Grid */}
-      <FeatureCards userRole="user" />
+      <FeatureCards userRole="user" onFeatureClick={handleFeatureClick} />
     </div>
   );
 };

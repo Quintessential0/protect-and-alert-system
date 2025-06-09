@@ -35,30 +35,19 @@ const AdminApprovals = () => {
 
   const fetchApprovals = async () => {
     try {
-      // Use a raw query since the table might not be in types yet
+      // Use RPC call since the table might not be in types yet
       const { data, error } = await supabase
-        .rpc('get_admin_approvals');
+        .rpc('get_admin_approvals_list');
 
       if (error) {
-        // Fallback to direct query if RPC doesn't exist
-        const response = await fetch('/api/admin-approvals', {
-          headers: {
-            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-          }
-        });
-        
-        if (response.ok) {
-          const fallbackData = await response.json();
-          setApprovals(fallbackData || []);
-        } else {
-          throw new Error('Failed to fetch approvals');
-        }
+        console.error('Error fetching approvals:', error);
+        // Fallback to empty array to prevent crashes
+        setApprovals([]);
       } else {
         setApprovals(data || []);
       }
     } catch (error: any) {
       console.error('Error fetching approvals:', error);
-      // For now, set empty array to prevent crashes
       setApprovals([]);
       toast({
         title: "Error",
@@ -75,26 +64,17 @@ const AdminApprovals = () => {
       const approval = approvals.find(a => a.id === approvalId);
       if (!approval) return;
 
-      // Use direct SQL execution for now
-      const updateQuery = `
-        UPDATE admin_approvals 
-        SET status = '${action === 'approve' ? 'approved' : 'rejected'}',
-            approved_by = '${user?.id}',
-            approved_at = NOW(),
-            rejection_reason = ${action === 'reject' && rejectionReason ? `'${rejectionReason}'` : 'NULL'}
-        WHERE id = '${approvalId}'
-      `;
+      // Use RPC for updating approvals
+      const { error } = await supabase.rpc('handle_admin_approval', {
+        approval_id: approvalId,
+        action: action,
+        approved_by_id: user?.id,
+        rejection_reason: rejectionReason || null
+      });
 
-      console.log('Executing approval update:', updateQuery);
-
-      if (action === 'approve') {
-        // Update user's profile role
-        const profileUpdateQuery = `
-          UPDATE profiles 
-          SET role = '${approval.requested_role}'
-          WHERE id = '${approval.user_id}'
-        `;
-        console.log('Updating user profile:', profileUpdateQuery);
+      if (error) {
+        console.error('Error handling approval:', error);
+        throw error;
       }
 
       await logActivity('admin', `${action === 'approve' ? 'Approved' : 'Rejected'} ${approval.requested_role} request for ${approval.requested_by_email}`, {

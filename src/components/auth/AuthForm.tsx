@@ -59,9 +59,17 @@ const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
           if (error) throw error;
           
           if (data.user) {
-            // Create approval request via direct insertion
-            console.log('Creating approval request for user:', data.user.id);
-            
+            // Create approval request using RPC to avoid type issues
+            const { error: approvalError } = await supabase.rpc('create_admin_approval_request', {
+              user_id: data.user.id,
+              requested_role_input: selectedRole,
+              requested_by_email_input: email
+            });
+
+            if (approvalError) {
+              console.error('Error creating approval request:', approvalError);
+            }
+
             // Create profile with pending status
             const { error: profileError } = await supabase
               .from('profiles')

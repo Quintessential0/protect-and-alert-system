@@ -60,7 +60,7 @@ const AuthForm = ({ onAuthSuccess }: AuthFormProps) => {
           
           if (data.user) {
             // Create approval request using RPC to avoid type issues
-            const { error: approvalError } = await supabase.rpc('create_admin_approval_request', {
+            const { error: approvalError } = await supabase.rpc('create_admin_approval_request' as any, {
               user_id: data.user.id,
               requested_role_input: selectedRole,
               requested_by_email_input: email

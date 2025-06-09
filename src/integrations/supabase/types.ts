@@ -42,6 +42,45 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_approvals: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          requested_by_email: string
+          requested_role: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_by_email: string
+          requested_role: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_by_email?: string
+          requested_role?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_requests: {
         Row: {
           admin_id: string
@@ -807,7 +846,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_admin_approval_request: {
+        Args: {
+          user_id: string
+          requested_role_input: string
+          requested_by_email_input: string
+        }
+        Returns: undefined
+      }
+      get_admin_approvals_list: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          user_id: string
+          requested_role: string
+          status: string
+          requested_by_email: string
+          approved_by: string
+          approved_at: string
+          rejection_reason: string
+          created_at: string
+        }[]
+      }
+      handle_admin_approval: {
+        Args: {
+          approval_id: string
+          action: string
+          approved_by_id: string
+          rejection_reason?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       user_role: "user" | "admin" | "govt_admin"

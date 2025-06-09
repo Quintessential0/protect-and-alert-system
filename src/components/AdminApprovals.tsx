@@ -35,13 +35,12 @@ const AdminApprovals = () => {
 
   const fetchApprovals = async () => {
     try {
-      // Use RPC call since the table might not be in types yet
+      // Use RPC call to get admin approvals
       const { data, error } = await supabase
-        .rpc('get_admin_approvals_list');
+        .rpc('get_admin_approvals_list' as any);
 
       if (error) {
         console.error('Error fetching approvals:', error);
-        // Fallback to empty array to prevent crashes
         setApprovals([]);
       } else {
         setApprovals(data || []);
@@ -65,7 +64,7 @@ const AdminApprovals = () => {
       if (!approval) return;
 
       // Use RPC for updating approvals
-      const { error } = await supabase.rpc('handle_admin_approval', {
+      const { error } = await supabase.rpc('handle_admin_approval' as any, {
         approval_id: approvalId,
         action: action,
         approved_by_id: user?.id,

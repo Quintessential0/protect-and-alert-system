@@ -6,17 +6,22 @@ import { useEmergencyIncident } from '@/hooks/useEmergencyIncident';
 import EmergencyCountdown from '@/components/emergency/EmergencyCountdown';
 import EmergencySOSButton from '@/components/emergency/EmergencySOSButton';
 
-interface EmergencyButtonProps {
-  onEmergencyTrigger: (incidentId: string) => void;
-}
-
-const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
+const EmergencyButton = () => {
   const [isPressed, setIsPressed] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [countdownInterval, setCountdownInterval] = useState<number | null>(null);
   const { toast } = useToast();
   const { isRecording, startEmergencyRecording } = useEmergencyRecording();
   const { createEmergencyIncident } = useEmergencyIncident();
+
+  const handleEmergencyTrigger = async (incidentId: string) => {
+    console.log('Emergency triggered with incident ID:', incidentId);
+    toast({
+      title: "🚨 Emergency Alert Sent!",
+      description: "Your emergency contacts have been notified and recording has started.",
+      variant: "destructive",
+    });
+  };
 
   const handleEmergencyPress = () => {
     setIsPressed(true);
@@ -33,7 +38,7 @@ const EmergencyButton = ({ onEmergencyTrigger }: EmergencyButtonProps) => {
         const incidentId = await createEmergencyIncident();
         if (incidentId) {
           await startEmergencyRecording(incidentId);
-          onEmergencyTrigger(incidentId);
+          await handleEmergencyTrigger(incidentId);
         }
         
         setIsPressed(false);

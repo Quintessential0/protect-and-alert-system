@@ -22,16 +22,6 @@ const Index = () => {
   const [isSOSActive, setIsSOSActive] = useState(false);
   const { toast } = useToast();
 
-  const handleEmergencyTrigger = (incidentId: string) => {
-    console.log('Emergency triggered with incident ID:', incidentId);
-    setIsSOSActive(true);
-    toast({
-      title: "Emergency Alert Sent!",
-      description: "Your emergency contacts have been notified.",
-      variant: "destructive",
-    });
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emergency-50 to-emergency-100 flex items-center justify-center">
@@ -81,7 +71,7 @@ const Index = () => {
       return (
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-center">
-            <EmergencyButton onEmergencyTrigger={handleEmergencyTrigger} />
+            <EmergencyButton />
           </div>
         </div>
       );

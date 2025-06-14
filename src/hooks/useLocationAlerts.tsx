@@ -20,8 +20,11 @@ export const useLocationAlerts = () => {
 
   const checkLocationAlerts = useCallback(async (lat: number, lng: number) => {
     try {
+      // Use direct SQL query since the RPC function might not be in types yet
       const { data: alerts, error } = await supabase
-        .rpc('check_location_alerts', { lat, lng });
+        .from('safe_zones')
+        .select('id, name, zone_type, center_lat, center_lng, radius_meters')
+        .eq('is_active', true);
 
       if (error) {
         console.error('Error checking location alerts:', error);
@@ -29,7 +32,31 @@ export const useLocationAlerts = () => {
       }
 
       if (alerts && alerts.length > 0) {
-        const newAlerts = alerts.filter((alert: LocationAlert) => 
+        // Calculate distance and check if user is within any zones
+        const activeAlerts: LocationAlert[] = [];
+        
+        alerts.forEach((zone) => {
+          const distance = calculateDistance(lat, lng, zone.center_lat, zone.center_lng);
+          
+          if (distance <= zone.radius_meters) {
+            const alert: LocationAlert = {
+              zone_id: zone.id,
+              zone_name: zone.name,
+              zone_type: zone.zone_type,
+              distance_meters: Math.round(distance),
+              alert_message: zone.zone_type === 'danger' 
+                ? 'Warning: You are entering a high-risk area. Please stay alert.'
+                : zone.zone_type === 'safe'
+                ? 'You have entered a designated safe zone.'
+                : `Location alert for: ${zone.name}`
+            };
+            
+            activeAlerts.push(alert);
+          }
+        });
+
+        // Filter out alerts that are already shown
+        const newAlerts = activeAlerts.filter((alert) => 
           !currentAlerts.some(existing => existing.zone_id === alert.zone_id)
         );
 
@@ -37,7 +64,7 @@ export const useLocationAlerts = () => {
           setCurrentAlerts(prev => [...prev, ...newAlerts]);
           
           // Show toast for each new alert
-          newAlerts.forEach((alert: LocationAlert) => {
+          newAlerts.forEach((alert) => {
             toast({
               title: alert.zone_type === 'danger' ? "⚠️ Danger Zone Alert" : "📍 Zone Alert",
               description: alert.alert_message,
@@ -68,6 +95,23 @@ export const useLocationAlerts = () => {
       console.error('Error in location alerts:', error);
     }
   }, [currentAlerts, toast, logActivity]);
+
+  // Helper function to calculate distance between two points
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371000; // Earth's radius in meters
+    const dLat = toRadians(lat2 - lat1);
+    const dLng = toRadians(lng2 - lng1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  const toRadians = (degrees: number): number => {
+    return degrees * (Math.PI/180);
+  };
 
   const startLocationTracking = useCallback(() => {
     if (!navigator.geolocation) {

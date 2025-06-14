@@ -94,7 +94,7 @@ export const useEmergencyRecording = () => {
           description: "Recording stored on device due to connection issues. Will upload when connection is restored.",
         });
         
-        setupRetryUpload(incidentId, blob, fileName, recordingData);
+        setupRetryUpload(incidentId, blob, recordingData);
       } catch (localError) {
         console.error('Failed to store recording locally:', localError);
         toast({
@@ -115,10 +115,15 @@ export const useEmergencyRecording = () => {
     });
   };
 
-  const setupRetryUpload = (incidentId: string, blob: Blob, fileName: string, recordingData: any) => {
+  const setupRetryUpload = (incidentId: string, blob: Blob, recordingData: any) => {
     const retryInterval = setInterval(async () => {
       try {
         console.log('Retrying upload for incident:', incidentId);
+        
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) throw new Error('Not authenticated');
+
+        const fileName = `${user.user.id}/${incidentId}_${Date.now()}.webm`;
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('emergency-recordings')
@@ -133,7 +138,7 @@ export const useEmergencyRecording = () => {
           await supabase.functions.invoke('process-recording-upload', {
             body: {
               incident_id: incidentId,
-              user_id: recordingData.user_id,
+              user_id: user.user.id,
               file_path: uploadData.path,
               file_type: recordingData.file_type,
               file_size: recordingData.file_size

@@ -56,10 +56,13 @@ export const useEmergencyAlerts = () => {
       
       // Fallback: try to get contacts and show local notification
       try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData.user) throw new Error('Not authenticated');
+
         const { data: contacts } = await supabase
           .from('emergency_contacts')
           .select('name')
-          .eq('user_id', user.user.id);
+          .eq('user_id', userData.user.id);
 
         await logActivity('emergency', 'Emergency alert failed, showing local notification', { 
           incident_id: incidentId,

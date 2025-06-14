@@ -2,15 +2,24 @@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivityLogger } from '@/components/ActivityLog';
+import { useWebPushNotifications } from './useWebPushNotifications';
 
 export const useEmergencyAlerts = () => {
   const { toast } = useToast();
   const { logActivity } = useActivityLogger();
+  const { sendEmergencyNotification } = useWebPushNotifications();
 
   const sendEmergencyAlerts = async (incidentId: string, location?: GeolocationPosition) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
+
+      // Get user profile for notification
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.user.id)
+        .single();
 
       console.log('Sending emergency alerts via edge function...');
 
@@ -35,8 +44,17 @@ export const useEmergencyAlerts = () => {
 
       console.log('Emergency alerts sent successfully:', data);
 
+      // Send web push notification
+      const userName = profile?.full_name || 'User';
+      const locationText = location 
+        ? `${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`
+        : undefined;
+      
+      await sendEmergencyNotification(userName, locationText);
+
       await logActivity('emergency', 'Emergency alerts sent successfully', { 
         incident_id: incidentId,
+        emails_sent: data.emails_sent,
         contacts_notified: data.contacts_notified,
         total_contacts: data.total_contacts,
         location: location ? {
@@ -45,9 +63,14 @@ export const useEmergencyAlerts = () => {
         } : null
       });
 
+      // Show success message with breakdown
+      const alertMessage = data.emails_sent > 0 
+        ? `${data.emails_sent} email alerts sent successfully!`
+        : 'Alerts processed - check activity log for details.';
+
       toast({
         title: "🚨 Emergency Alerts Sent!",
-        description: `${data.contacts_notified} emergency contacts have been notified.`,
+        description: alertMessage,
         variant: "destructive",
       });
 
@@ -61,7 +84,7 @@ export const useEmergencyAlerts = () => {
 
         const { data: contacts } = await supabase
           .from('emergency_contacts')
-          .select('name')
+          .select('name, phone')
           .eq('user_id', userData.user.id);
 
         await logActivity('emergency', 'Emergency alert failed, showing local notification', { 
@@ -70,9 +93,12 @@ export const useEmergencyAlerts = () => {
           contacts_count: contacts?.length || 0
         });
 
+        // Show manual contact info
+        const contactList = contacts?.map(c => `${c.name}: ${c.phone}`).join(', ') || 'No contacts found';
+        
         toast({
           title: "⚠️ Alert System Error",
-          description: `Unable to send alerts automatically. Please contact your ${contacts?.length || 0} emergency contacts manually.`,
+          description: `Unable to send alerts automatically. Please contact: ${contactList}`,
           variant: "destructive",
         });
       } catch (fallbackError) {

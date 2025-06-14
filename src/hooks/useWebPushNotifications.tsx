@@ -1,12 +1,6 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useActivityLogger } from '@/components/ActivityLog';
-
-interface ExtendedNotificationOptions extends NotificationOptions {
-  vibrate?: number[];
-  actions?: NotificationAction[];
-}
 
 export const useWebPushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);

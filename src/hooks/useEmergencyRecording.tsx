@@ -3,22 +3,15 @@ import { useState, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useActivityLogger } from '@/components/ActivityLog';
+import { useLocationSharing } from './useLocationSharing';
 
 export const useEmergencyRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
   const { logActivity } = useActivityLogger();
+  const { shareLocationWithContacts } = useLocationSharing();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
-
-  const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
 
   const uploadRecording = async (blob: Blob, incidentId: string, type: 'audio' | 'video') => {
     try {
@@ -27,13 +20,13 @@ export const useEmergencyRecording = () => {
 
       const fileName = `${user.user.id}/${incidentId}_${Date.now()}.webm`;
       
-      // Try to upload to Supabase storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('emergency-recordings')
         .upload(fileName, blob);
 
       if (uploadError) {
-        // If upload fails (offline), store locally
+        console.error('Upload error:', uploadError);
+        // Store locally as fallback
         const recordingData = {
           incident_id: incidentId,
           user_id: user.user.id,
@@ -43,10 +36,6 @@ export const useEmergencyRecording = () => {
           duration_seconds: 300
         };
 
-        // Store recording metadata and try to insert when online
-        await supabase.from('recordings').insert(recordingData);
-        
-        // Store blob locally for later upload
         localStorage.setItem(`emergency_recording_${incidentId}`, await blobToBase64(blob));
         localStorage.setItem(`emergency_recording_meta_${incidentId}`, JSON.stringify(recordingData));
         
@@ -61,7 +50,6 @@ export const useEmergencyRecording = () => {
           description: "Recording saved locally. Will upload when connection is restored.",
         });
         
-        // Set up retry mechanism
         setupRetryUpload(incidentId, blob, fileName, recordingData);
       } else {
         // Upload successful
@@ -112,6 +100,15 @@ export const useEmergencyRecording = () => {
     }
   };
 
+  const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
   const setupRetryUpload = (incidentId: string, blob: Blob, fileName: string, recordingData: any) => {
     const retryInterval = setInterval(async () => {
       try {
@@ -120,7 +117,6 @@ export const useEmergencyRecording = () => {
           .upload(fileName, blob);
 
         if (!uploadError) {
-          // Upload successful, clean up local storage
           localStorage.removeItem(`emergency_recording_${incidentId}`);
           localStorage.removeItem(`emergency_recording_meta_${incidentId}`);
           clearInterval(retryInterval);
@@ -138,9 +134,8 @@ export const useEmergencyRecording = () => {
       } catch (retryError) {
         console.log('Retry upload failed, will try again...');
       }
-    }, 30000); // Retry every 30 seconds
+    }, 30000);
 
-    // Stop retrying after 1 hour
     setTimeout(() => {
       clearInterval(retryInterval);
     }, 3600000);
@@ -148,6 +143,9 @@ export const useEmergencyRecording = () => {
 
   const startEmergencyRecording = useCallback(async (incidentId: string) => {
     try {
+      // Share location with contacts immediately
+      await shareLocationWithContacts(incidentId);
+
       // Try video first, fall back to audio
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: true, 
@@ -234,7 +232,7 @@ export const useEmergencyRecording = () => {
         });
       }
     }
-  }, [logActivity, toast]);
+  }, [logActivity, toast, shareLocationWithContacts]);
 
   return {
     isRecording,

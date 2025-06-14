@@ -3,6 +3,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useActivityLogger } from '@/components/ActivityLog';
 
+interface ExtendedNotificationOptions extends NotificationOptions {
+  vibrate?: number[];
+  actions?: NotificationAction[];
+}
+
 export const useWebPushNotifications = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -69,7 +74,6 @@ export const useWebPushNotifications = () => {
       const notification = new Notification(title, {
         icon: '/favicon.ico',
         badge: '/favicon.ico',
-        vibrate: [200, 100, 200],
         requireInteraction: true,
         ...options
       });
@@ -96,13 +100,7 @@ export const useWebPushNotifications = () => {
     await sendNotification(title, {
       body,
       tag: 'emergency',
-      requireInteraction: true,
-      actions: [
-        {
-          action: 'view',
-          title: 'View Details'
-        }
-      ]
+      requireInteraction: true
     });
   }, [sendNotification]);
 

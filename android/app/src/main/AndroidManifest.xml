@@ -64,5 +64,8 @@
     
     <!-- Wake lock for emergency features -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    
+    <!-- System alert window for emergency overlay -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
 </manifest>

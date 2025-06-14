@@ -12,41 +12,74 @@ export const useEmergencyAlerts = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
 
-      const { data: contacts, error: contactsError } = await supabase
-        .from('emergency_contacts')
-        .select('*')
-        .eq('user_id', user.user.id)
-        .order('priority');
+      console.log('Sending emergency alerts via edge function...');
 
-      if (contactsError) throw contactsError;
-
-      for (const contact of contacts || []) {
-        console.log(`Sending emergency alert to ${contact.name} at ${contact.phone}`);
-        
-        await logActivity('emergency', `Emergency alert sent to ${contact.name}`, { 
-          contact_id: contact.id,
+      // Call the edge function to send alerts
+      const { data, error } = await supabase.functions.invoke('send-emergency-alerts', {
+        body: {
           incident_id: incidentId,
-          contact_phone: contact.phone,
+          user_id: user.user.id,
           location: location ? {
             lat: location.coords.latitude,
-            lng: location.coords.longitude
-          } : null
-        });
+            lng: location.coords.longitude,
+            accuracy: location.coords.accuracy
+          } : undefined,
+          message_type: 'both'
+        }
+      });
+
+      if (error) {
+        console.error('Edge function error:', error);
+        throw error;
       }
 
+      console.log('Emergency alerts sent successfully:', data);
+
+      await logActivity('emergency', 'Emergency alerts sent successfully', { 
+        incident_id: incidentId,
+        contacts_notified: data.contacts_notified,
+        total_contacts: data.total_contacts,
+        location: location ? {
+          lat: location.coords.latitude,
+          lng: location.coords.longitude
+        } : null
+      });
+
       toast({
-        title: "Emergency Contacts Notified",
-        description: `Alerts sent to ${contacts?.length || 0} emergency contacts.`,
+        title: "🚨 Emergency Alerts Sent!",
+        description: `${data.contacts_notified} emergency contacts have been notified.`,
         variant: "destructive",
       });
 
     } catch (error: any) {
       console.error('Error sending emergency alerts:', error);
-      toast({
-        title: "Alert Error",
-        description: "Some emergency alerts may not have been sent. Emergency services have been notified.",
-        variant: "destructive",
-      });
+      
+      // Fallback: try to get contacts and show local notification
+      try {
+        const { data: contacts } = await supabase
+          .from('emergency_contacts')
+          .select('name')
+          .eq('user_id', user.user.id);
+
+        await logActivity('emergency', 'Emergency alert failed, showing local notification', { 
+          incident_id: incidentId,
+          error: error.message,
+          contacts_count: contacts?.length || 0
+        });
+
+        toast({
+          title: "⚠️ Alert System Error",
+          description: `Unable to send alerts automatically. Please contact your ${contacts?.length || 0} emergency contacts manually.`,
+          variant: "destructive",
+        });
+      } catch (fallbackError) {
+        console.error('Fallback error:', fallbackError);
+        toast({
+          title: "⚠️ Critical Error",
+          description: "Emergency alert system unavailable. Contact emergency services directly.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
